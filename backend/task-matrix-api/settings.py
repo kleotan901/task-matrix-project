@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
+    "drf_spectacular",
     "account",
 ]
 
@@ -145,4 +146,25 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1000),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": False,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Eisenhower Matrix API",
+    "DESCRIPTION":
+        """The Eisenhower Matrix is a productivity tool that helps users prioritize tasks based on 
+        their urgency and importance. This API allows users to create, update, and manage tasks within 
+        the matrix's four quadrants:
+        
+        - Urgent and Important
+        - Important but Not Urgent
+        - Urgent but Not Important
+        - Neither Urgent nor Important""",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "defaultModelRendering": "model",
+        "defaultModelsExpandDepth": 2,
+        "defaultModelExpandDepth": 2,
+    },
 }
