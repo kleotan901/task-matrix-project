@@ -1,7 +1,12 @@
+import os
+import uuid
+
+from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext as _
+from django.utils.text import slugify
 
 
 class UserManager(BaseUserManager):
@@ -38,9 +43,18 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
+def image_file_path(instance, filename):
+    _, extension = os.path.splitext(filename)
+    filename = f"{slugify(instance.email)}-{uuid.uuid4()}{extension}"
+
+    return os.path.join("uploads/users/", filename)
+
+
 class User(AbstractUser):
     username = None
     email = models.EmailField(_("email address"), unique=True)
+    avatar_url = models.ImageField(upload_to=image_file_path, blank=True)
+    bio = models.TextField(max_length=500, blank=True, null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
