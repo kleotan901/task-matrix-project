@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from account.models import User
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,6 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
             "password",
             "first_name",
             "last_name",
+            "role",
             "avatar_url",
             "bio",
         )
@@ -39,11 +42,20 @@ class UserListSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(UserListSerializer):
-    def get_full_name(self, obj):
+    @staticmethod
+    def get_full_name(obj: User) -> str:
         return f"{obj.first_name} {obj.last_name}"
 
     full_name = serializers.SerializerMethodField()
 
     class Meta:
         model = get_user_model()
-        fields = ("id", "email", "full_name", "avatar_url", "bio")
+        fields = (
+            "id",
+            "email",
+            "full_name",
+            "role",
+            "avatar_url",
+            "bio",
+            "email_is_verified",
+        )
