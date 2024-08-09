@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -12,13 +12,13 @@ app_name = "account"
 urlpatterns = [
     path("register/", CreateUserView.as_view(), name="create"),
     path(
-        "email-confirmation/",
+        "sent-email-verify/",
         SendEmailConfirmationView.as_view({"post": "post"}),
-        name="email-confirmation",
+        name="sent-email-verify",
     ),
     path(
         "email-verification/",
-        SendEmailConfirmationView.as_view({"post": "email_verification"}),
+        SendEmailConfirmationView.as_view({"get": "email_verification"}),
         name="email-verification",
     ),
     path("login/", TokenObtainPairView.as_view(), name="token-obtain-pair"),
