@@ -188,4 +188,4 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
-ACTIVATION_LINK = "http://127.0.0.1:8000/api/account/email-verification?token_id="
+ACTIVATION_LINK = "http://127.0.0.1:8000/api/account/sent-email-verify/?token_id="

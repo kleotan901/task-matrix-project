@@ -1,16 +1,27 @@
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, status, viewsets, response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from account.models import EmailConfirmationToken
+from account.models import EmailConfirmationToken, User
 from account.serializers import UserDetailSerializer, UserListSerializer, UserSerializer
 from account.tasks import send_email
 
 
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        token = EmailConfirmationToken.objects.create(user=user)
+        send_email.delay(user.email, token.id, user.id)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ManageUserView(generics.RetrieveUpdateAPIView):
@@ -61,8 +72,8 @@ class SendEmailConfirmationView(viewsets.ViewSet):
     def post(self, request, format=None):
         user = request.user
         if not user.email_is_verified:
-            token = EmailConfirmationToken.objects.create(user=user)
-            send_email.delay(user.email, token.id, user.id)
+            token = EmailConfirmationToken.objects.get_or_create(user=user)
+            send_email.delay(user.email, token[0].id, user.id)
             return Response(
                 {"message": "The activation link has been sent to your email!"},
                 status.HTTP_201_CREATED,
