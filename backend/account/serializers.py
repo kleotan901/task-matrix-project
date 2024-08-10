@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from account.models import User
+from account.models import User, EmailConfirmationToken
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -59,3 +59,9 @@ class UserDetailSerializer(UserListSerializer):
             "bio",
             "email_is_verified",
         )
+
+
+class EmailConfirmationTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmailConfirmationToken
+        fields = ("id", "user")

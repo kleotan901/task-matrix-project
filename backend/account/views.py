@@ -1,12 +1,16 @@
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status, viewsets, response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
-from account.models import EmailConfirmationToken, User
-from account.serializers import UserDetailSerializer, UserListSerializer, UserSerializer
+from account.models import EmailConfirmationToken
+from account.serializers import (
+    UserDetailSerializer,
+    UserListSerializer,
+    UserSerializer,
+    EmailConfirmationTokenSerializer,
+)
 from account.tasks import send_email
 
 
@@ -62,6 +66,7 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
 
 
 class SendEmailConfirmationView(viewsets.ViewSet):
+    serializer_class = EmailConfirmationTokenSerializer
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
@@ -85,21 +90,7 @@ class SendEmailConfirmationView(viewsets.ViewSet):
     @extend_schema(
         description="""
         The activation link. Verifies the user's email using a token and user_id provided in the request.
-        """,
-        parameters=[
-            OpenApiParameter(
-                name="token_id",
-                description="token_id parameter",
-                required=True,
-                type=str,
-            ),
-            OpenApiParameter(
-                name="user_id",
-                description="user_id parameter",
-                required=True,
-                type=str,
-            ),
-        ],
+        """
     )
     def email_verification(self, request):
         token_id = request.GET.get("token_id")
