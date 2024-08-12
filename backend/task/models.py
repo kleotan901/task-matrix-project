@@ -4,7 +4,16 @@ from rest_framework.reverse import reverse
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=64, unique=True, default=None)
+    name = models.CharField(max_length=64, default=None)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="tags",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    class Meta:
+        unique_together = ("name", "user")
 
     def __str__(self):
         return self.name
@@ -12,10 +21,10 @@ class Tag(models.Model):
 
 class Task(models.Model):
     PRIORITY_CHOICES = [
-        ("Urgent and important", "Urgent and important"),
-        ("Important but Not Urgent", "Important but Not Urgent"),
-        ("Urgent but Not Important", "Urgent but Not Important"),
-        ("Neither Urgent nor Important", "Neither Urgent nor Important"),
+        ("Urgent and important", "Do First"),
+        ("Important but Not Urgent", "Schedule"),
+        ("Urgent but Not Important", "Delegate"),
+        ("Neither Urgent nor Important", "Eliminate"),
     ]
 
     STATUS_CHOICES = [
@@ -40,7 +49,7 @@ class Task(models.Model):
     finish_date = models.DateTimeField(blank=True, null=True)
     is_completed = models.BooleanField(default=False)
     assignees = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="tasks")
-    tags = models.ManyToManyField(Tag, related_name="tasks", default=None, blank=True)
+    tags = models.ManyToManyField(Tag, related_name="tasks", blank=True)
 
     def __str__(self):
         return f"{self.title} {self.deadline}({self.priority})"

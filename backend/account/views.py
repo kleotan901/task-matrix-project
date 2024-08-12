@@ -9,7 +9,7 @@ from account.serializers import (
     UserDetailSerializer,
     UserListSerializer,
     UserSerializer,
-    EmailConfirmationTokenSerializer,
+    EmailConfirmationTokenSerializer
 )
 from account.tasks import send_email
 
