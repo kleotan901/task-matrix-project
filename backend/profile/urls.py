@@ -5,9 +5,15 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
-from account.views import CreateUserView, ManageUserView, SendEmailConfirmationView
+from profile.helper import google_login, google_callback
+from profile.views import (
+    CreateUserView,
+    ManageUserView,
+    SendEmailConfirmationView,
+    LogoutApi,
+)
 
-app_name = "account"
+app_name = "profile"
 
 urlpatterns = [
     path("register/", CreateUserView.as_view(), name="create"),
@@ -25,4 +31,5 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("token/verify/", TokenVerifyView.as_view(), name="token-verify"),
     path("myprofile/", ManageUserView.as_view(), name="profile-manage"),
+    path("logout/", LogoutApi.as_view(), name="logout"),
 ]
