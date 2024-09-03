@@ -9,9 +9,12 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
+import dj_database_url
 
 from dotenv import load_dotenv
 
@@ -36,6 +39,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -45,10 +49,16 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     "rest_framework_simplejwt",
+    "rest_framework.authtoken",
+    "django.contrib.sites",
+
     "drf_spectacular",
-    "account",
-    "task"
+    "profile",
+    "task",
+    "project",
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -83,13 +93,15 @@ WSGI_APPLICATION = "task-matrix-api.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if os.getenv("DJANGO_ENV") == "production":
+    DATABASES = {"default": dj_database_url.config(conn_max_age=500, ssl_require=True)}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -130,16 +142,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = "account.User"
+AUTH_USER_MODEL = "profile.User"
+
+ACCOUNT_USER_MODEL_USERNAME_FIELD = "email"
+
+BASE_API_URL = "http://localhost:8000/"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    'DEFAULT_FILTER_BACKENDS': (
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ),
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
@@ -151,13 +165,29 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1500),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": False,
-    "AUTH_HEADER_NAME": "HTTP_AUTHORIZE",
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
 }
+
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+)
+
+REST_AUTH = {
+    "USE_JWT": True,
+    "JWT_AUTH_COOKIE": "jwt-auth",
+}
+
+REST_USE_JWT = True
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_VERIFICATION = "optional"
+LOGIN_REDIRECT_URL = "/"
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Eisenhower Matrix API",
-    "DESCRIPTION":
-        """The Eisenhower Matrix is a productivity tool that helps users prioritize tasks based on 
+    "DESCRIPTION": """The Eisenhower Matrix is a productivity tool that helps users prioritize tasks based on 
         their urgency and importance. This API allows users to create, update, and manage tasks within 
         the matrix's four quadrants:
         
@@ -167,19 +197,18 @@ SPECTACULAR_SETTINGS = {
         - Neither Urgent nor Important""",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-
     "SWAGGER_UI_SETTINGS": {
         "deepLinking": True,
         "defaultModelRendering": "model",
         "defaultModelsExpandDepth": 2,
         "defaultModelExpandDepth": 2,
-        "persistAuthorization": True
+        "persistAuthorization": True,
     },
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": "/api/",
     "AUTHENTICATION_WHITELIST": [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "SECURITY": [
         {"jwtAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}},
@@ -203,4 +232,4 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
-ACTIVATION_LINK = "http://127.0.0.1:8000/api/account/email-verification/?token_id="
+ACTIVATION_LINK = "http://127.0.0.1:8000/api/profile/email-verification/?token_id="
