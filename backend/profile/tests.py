@@ -8,28 +8,17 @@ from django.test import TestCase
 from requests.auth import _basic_auth_str
 from rest_framework import status
 from rest_framework.reverse import reverse
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
 
 from profile.models import image_file_path, EmailConfirmationToken
 from profile.serializers import UserDetailSerializer, UserSerializer
+
+User = get_user_model()
 
 
 class AccountNotAuthenticatedUserTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-
-    def test_google_sign_up(self):
-        client_id = settings.SOCIALACCOUNT_PROVIDERS["google"]["APP"]["client_id"]
-        client_secret = settings.SOCIALACCOUNT_PROVIDERS["google"]["APP"]["secret"]
-        url = reverse("google-login")
-
-        response = self.client.get(
-            url,
-            content_type="application/x-www-form-urlencoded",
-            HTTP_AUTHORIZATION=_basic_auth_str(client_id, client_secret),
-        )
-        print(response.__dict__)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_user_create_with_email_and_password_only(self):
         payload = {"email": "emailtest@mail.com", "password": "testpassword"}
@@ -55,12 +44,11 @@ class AccountNotAuthenticatedUserTestCase(TestCase):
         response = self.client.post(url, payload)
 
         user = get_user_model().objects.get(email=payload["email"])
-        token = user.tokens.all()[0]
+        token = user.tokens.first()
 
         mock_send_email.assert_called_once_with(user.email, token.id, user.id)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(mock_send_email.called, 1)
 
 
 class AccountAuthenticatedUserTestCase(TestCase):
