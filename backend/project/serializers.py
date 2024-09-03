@@ -6,10 +6,6 @@ from project.models import Project
 from task.models import Task
 from task.serializers import TaskListSerializer
 
-import logging
-
-logger = logging.getLogger(__name__)
-
 
 class ProjectSerializer(serializers.ModelSerializer):
     tasks = TaskListSerializer(read_only=False, required=False, many=True)
@@ -46,9 +42,11 @@ class ProjectDetailSerializer(ProjectSerializer):
     def create(self, validated_data):
         with transaction.atomic():
             user_data = validated_data.pop("user_id")
-            assignees = validated_data.pop("assignees", [])
             user = get_user_model().objects.get(id=user_data)
+            assignees = validated_data.pop("assignees", [])
             tasks_data = validated_data.pop("tasks", [])
+            validated_data.pop("user", None)
+
             project = Project.objects.create(user=user, **validated_data)
 
             for task_data in tasks_data:
@@ -65,7 +63,7 @@ class ProjectDetailSerializer(ProjectSerializer):
         return project
 
     def update(self, instance, validated_data):
-        assignees = validated_data.pop("assignees", [])
+        assignees = validated_data.get("assignees", [])
         tasks_data = validated_data.get("tasks", [])
         # Update project fields
         instance.user = validated_data.get("user", instance.user)
@@ -95,6 +93,7 @@ class ProjectDetailSerializer(ProjectSerializer):
                     project=instance,
                     title=valid_task_data.get("title"),
                     start_date=valid_task_data.get("start_date"),
+                    finish_date=valid_task_data.get("finish_date"),
                     priority=valid_task_data.get("priority"),
                     is_completed=valid_task_data.get("is_completed"),
                 )
