@@ -25,8 +25,6 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
-from profile.views import GoogleLogin
-
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/profile/", include("profile.urls", namespace="profile")),

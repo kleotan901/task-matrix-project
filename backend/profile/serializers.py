@@ -1,4 +1,3 @@
-from dj_rest_auth.registration.serializers import SocialLoginSerializer
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
@@ -66,10 +65,3 @@ class EmailConfirmationTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailConfirmationToken
         fields = ("id", "user")
-
-
-class GoogleLoginSerializer(SocialLoginSerializer):
-    access_token = serializers.CharField(write_only=True)
-
-    class Meta:
-        fields = ("access_token",)
