@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from rest_framework.exceptions import ValidationError
 
 
 class Project(models.Model):
@@ -20,3 +21,14 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+
+    @staticmethod
+    def validate_date_fields(start_date, finish_date):
+        if start_date is not None or finish_date is not None:
+            if start_date > finish_date:
+                raise ValidationError(
+                    "Finish date cannot be earlier than the start date."
+                )
+
+    def clean(self):
+        Project.validate_date_fields(self.start_date, self.finish_date)
