@@ -5,18 +5,19 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
-from profile.helper import google_login, google_callback
 from profile.views import (
     CreateUserView,
     ManageUserView,
     SendEmailConfirmationView,
     LogoutApi,
+    GoogleUserProfile,
 )
 
 app_name = "profile"
 
 urlpatterns = [
     path("register/", CreateUserView.as_view(), name="create"),
+    path("google/", GoogleUserProfile.as_view(), name="google"),
     path(
         "sent-email-verify/",
         SendEmailConfirmationView.as_view({"post": "post"}),

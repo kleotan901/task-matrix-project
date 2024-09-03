@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -24,11 +25,14 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
+from profile.views import GoogleLogin
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/account/", include("account.urls", namespace="account")),
-    path("api/tasks/", include("task.urls", namespace="task")),
+    path("api/profile/", include("profile.urls", namespace="profile")),
+    # path("auth/social/google/", GoogleLogin.as_view(), name="google-login"),
+    path("api/", include("task.urls", namespace="tasks")),
+    path("api/", include("project.urls", namespace="projects")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/doc/swagger/",
@@ -40,5 +44,5 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name="schema"),
         name="redoc",
     ),
-    path("__debug__/", include("debug_toolbar.urls")),
+    # path("__debug__/", include("debug_toolbar.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
