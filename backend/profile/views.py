@@ -140,6 +140,14 @@ class GoogleUserProfile(APIView):
             },
         )
 
+        # If user already exists, update the necessary fields
+        if not created:
+            user.first_name = user_info["given_name"]
+            user.last_name = user_info["family_name"]
+            user.avatar_url = user_info["picture"]
+            user.email_is_verified = user_info["verified_email"]
+            user.save()
+
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
         jwt_tokens = {
