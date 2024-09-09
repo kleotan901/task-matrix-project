@@ -15,6 +15,7 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 import dj_database_url
+from decouple import config
 
 from dotenv import load_dotenv
 
@@ -32,9 +33,9 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = config("DEBUG", default=True)
 
-ALLOWED_HOSTS = ["13.53.163.10", "localhost"]
+ALLOWED_HOSTS = ["13.53.163.10", "localhost", "127.0.0.1:8000"]
 
 # Application definition
 
@@ -73,6 +74,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:3001",
     "http://127.0.0.1:3000",
 ]
 

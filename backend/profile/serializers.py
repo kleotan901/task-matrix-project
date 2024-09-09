@@ -11,8 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
             "id",
             "email",
             "password",
-            "first_name",
-            "last_name",
+            "full_name",
             "role",
             "avatar_url",
             "bio",
@@ -38,16 +37,10 @@ class UserSerializer(serializers.ModelSerializer):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ("id", "email", "first_name", "last_name", "avatar_url", "bio")
+        fields = ("id", "email", "full_name", "avatar_url", "bio")
 
 
 class UserDetailSerializer(UserListSerializer):
-    @staticmethod
-    def get_full_name(obj: User) -> str:
-        return f"{obj.first_name} {obj.last_name}"
-
-    full_name = serializers.SerializerMethodField()
-
     class Meta:
         model = get_user_model()
         fields = (
@@ -58,6 +51,19 @@ class UserDetailSerializer(UserListSerializer):
             "avatar_url",
             "bio",
             "email_is_verified",
+        )
+
+
+class UserGoogleSerializer(UserListSerializer):
+    verified_email = serializers.BooleanField(source="email_is_verified", read_only=False)
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "email",
+            "full_name",
+            "avatar_url",
+            "verified_email",
         )
 
 

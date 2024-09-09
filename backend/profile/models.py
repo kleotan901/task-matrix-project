@@ -64,15 +64,12 @@ class User(AbstractUser):
     bio = models.TextField(max_length=500, blank=True, null=True)
     email_is_verified = models.BooleanField(default=False)
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, blank=True)
+    full_name = models.EmailField(max_length=255, blank=True, null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     objects = UserManager()
-
-    @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}"
 
 
 class EmailConfirmationToken(models.Model):
