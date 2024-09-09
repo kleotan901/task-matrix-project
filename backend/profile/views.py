@@ -14,6 +14,7 @@ from profile.serializers import (
     UserListSerializer,
     UserSerializer,
     EmailConfirmationTokenSerializer,
+    UserGoogleSerializer,
 )
 
 from profile.tasks import send_email
@@ -119,6 +120,12 @@ class SendEmailConfirmationView(viewsets.ViewSet):
 
 
 class GoogleUserProfile(APIView):
+    serializer_class = UserGoogleSerializer
+    @extend_schema(
+        description="Google Sign-In.",
+        request=UserGoogleSerializer,
+        responses={200: UserSerializer},
+    )
     def post(self, request, *args, **kwargs):
         user_info = request.data
         if user_info.get("email", None) is None:
@@ -133,19 +140,17 @@ class GoogleUserProfile(APIView):
         user, created = User.objects.get_or_create(
             email=user_info["email"],
             defaults={
-                "first_name": user_info["given_name"],
-                "last_name": user_info["family_name"],
-                "avatar_url": user_info["picture"],
-                "email_is_verified": user_info["verified_email"],
+                "full_name": user_info.get("full_name"),
+                "avatar_url": user_info.get("picture"),
+                "email_is_verified": user_info.get("verified_email"),
             },
         )
 
         # If user already exists, update the necessary fields
         if not created:
-            user.first_name = user_info["given_name"]
-            user.last_name = user_info["family_name"]
-            user.avatar_url = user_info["picture"]
-            user.email_is_verified = user_info["verified_email"]
+            user.full_name = user_info.get("full_name")
+            user.avatar_url = user_info.get("picture")
+            user.email_is_verified = user_info.get("verified_email")
             user.save()
 
         # Generate JWT tokens
