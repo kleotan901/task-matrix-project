@@ -135,14 +135,14 @@ class GoogleUserProfile(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        verified_email = user_info.get("verified_email", "false").lower() in ['true', '1', 'yes']
+
         # Create or update user in DB
         user, created = User.objects.get_or_create(
             email=user_info["email"],
             defaults={
                 "full_name": user_info.get("full_name"),
                 "avatar_url": user_info.get("avatar_url"),
-                "email_is_verified": verified_email,
+                "email_is_verified": user_info.get("verified_email"),
             },
         )
 
@@ -150,7 +150,7 @@ class GoogleUserProfile(APIView):
         if not created:
             user.full_name = user_info.get("full_name")
             user.avatar_url = user_info.get("avatar_url")
-            user.email_is_verified = verified_email
+            user.email_is_verified = user_info.get("verified_email")
             user.save()
 
         # Generate JWT tokens
