@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "django.contrib.sites",
     "drf_spectacular",
-
     "profile",
     "task",
     "project",
@@ -76,20 +75,20 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3000",
-    "http://127.0.0.1:3001"
+    "http://127.0.0.1:3001",
 ]
 CORS_ALLOW_HEADERS = [
-    'content-type',
-    'authorization',
+    "content-type",
+    "authorization",
 ]
 
 CORS_ALLOW_METHODS = [
-    'GET',
-    'POST',
-    'PUT',
-    'PATCH',
-    'DELETE',
-    'OPTIONS',
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
 ]
 
 ROOT_URLCONF = "task-matrix-api.urls"
@@ -194,6 +193,7 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {"anon": "10000/day", "user": "10000/day"},
+    "EXCEPTION_HANDLER": "task-matrix-api.utils.api_exception_handler",
 }
 
 SIMPLE_JWT = {
