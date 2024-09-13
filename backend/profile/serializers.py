@@ -12,7 +12,6 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "password",
             "full_name",
-            "role",
             "avatar_url",
             "bio",
         )
@@ -47,7 +46,6 @@ class UserDetailSerializer(UserListSerializer):
             "id",
             "email",
             "full_name",
-            "role",
             "avatar_url",
             "bio",
             "email_is_verified",

@@ -51,20 +51,12 @@ def image_file_path(instance, filename):
 
 
 class User(AbstractUser):
-    ROLE_CHOICES = [
-        ("Private User", "Private User"),
-        ("Life Coach", "Life Coach"),
-        ("Career Coach", "Career Coach"),
-        ("Wellness/Fitness Coach", "Wellness/Fitness Coach"),
-    ]
-
     username = None
     email = models.EmailField(_("email address"), unique=True)
     avatar_url = models.ImageField(upload_to=image_file_path, blank=True)
     bio = models.TextField(max_length=500, blank=True, null=True)
     email_is_verified = models.BooleanField(default=False)
-    role = models.CharField(max_length=50, choices=ROLE_CHOICES, blank=True)
-    full_name = models.EmailField(max_length=255, blank=True, null=True)
+    full_name = models.CharField(max_length=255, blank=True, null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
