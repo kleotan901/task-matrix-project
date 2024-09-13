@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.contrib.auth import logout
+from django.contrib.auth import logout, get_user_model
 from rest_framework.views import APIView
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -14,7 +14,7 @@ from profile.serializers import (
     UserListSerializer,
     UserSerializer,
     EmailConfirmationTokenSerializer,
-    UserGoogleSerializer,
+    UserGoogleSerializer
 )
 
 from profile.tasks import send_email
@@ -43,7 +43,7 @@ class ManageUserView(generics.RetrieveUpdateAPIView, generics.DestroyAPIView):
         return self.request.user
 
     def get_serializer_class(self):
-        if self.request.method == "GET":
+        if self.request.method in ("GET", "PUT"):
             return UserDetailSerializer
         return UserSerializer
 
@@ -121,6 +121,7 @@ class SendEmailConfirmationView(viewsets.ViewSet):
 
 class GoogleUserProfile(APIView):
     serializer_class = UserGoogleSerializer
+
     @extend_schema(
         description="Google Sign-In.",
         request=UserGoogleSerializer,
