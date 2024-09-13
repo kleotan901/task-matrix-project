@@ -3,7 +3,7 @@ from django.contrib.auth.password_validation import validate_password, Validatio
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework import serializers
 
-from profile.models import User, EmailConfirmationToken
+from profile.models import EmailConfirmationToken
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ("id", "email", "password", "full_name")
         read_only_fields = ("is_staff",)
-        extra_kwargs = {"password": {"write_only": True, "min_length": 5}}
+        extra_kwargs = {"password": {"write_only": True, "min_length": 8}}
 
     def validate_password(self, value):
         try:
