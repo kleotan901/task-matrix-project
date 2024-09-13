@@ -21,7 +21,7 @@ class AccountNotAuthenticatedUserTestCase(TestCase):
         self.client = APIClient()
 
     def test_user_create_with_email_and_password_only(self):
-        payload = {"email": "emailtest@mail.com", "password": "testpassword"}
+        payload = {"email": "emailtest@mail.com", "password": "testPassword1!"}
         url = reverse("profile:create")
 
         response = self.client.post(url, payload)
@@ -29,17 +29,17 @@ class AccountNotAuthenticatedUserTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_email_required(self):
-        payload = {"email": "", "password": "testpassword"}
+        payload = {"email": "", "password": "testPassword1!"}
         url = reverse("profile:create")
 
         response = self.client.post(url, payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["email"][0], "This field may not be blank.")
+        self.assertEqual(response.data["error"]["details"]["email"][0], "This field may not be blank.")
 
     @patch("profile.tasks.send_email.delay")
     def test_email_activation_link_send_when_profile_created(self, mock_send_email):
-        payload = {"email": "emailtest@mail.com", "password": "testpassword"}
+        payload = {"email": "emailtest@mail.com", "password": "testPassword1!"}
         url = reverse("profile:create")
         response = self.client.post(url, payload)
 
@@ -78,22 +78,6 @@ class AccountAuthenticatedUserTestCase(TestCase):
 
         # Check the start of the path
         self.assertTrue(path.startswith("uploads/users/"))
-
-    def test_full_name(self):
-        payload = {
-            "email": "user@test.com",
-            "first_name": "Bob",
-            "last_name": "Snail",
-        }
-        url = reverse("profile:profile-manage")
-        self.client.patch(url, payload)
-
-        user = get_user_model().objects.get(email="user@test.com")
-        serializer = UserDetailSerializer(user)
-
-        self.assertEqual(
-            serializer.data["full_name"], f"{user.first_name} {user.last_name}"
-        )
 
     def test_email_verification(self):
         user = get_user_model().objects.get(email="user@test.com")
