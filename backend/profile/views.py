@@ -55,20 +55,12 @@ class ManageUserView(generics.RetrieveUpdateAPIView, generics.DestroyAPIView):
         return super().retrieve(request, *args, **kwargs)
 
     @extend_schema(
-        description="Update the authenticated user's details and/or change the password.",
-        request=UserSerializer,
-        responses={200: UserSerializer},
+        description="Update the authenticated user's details.",
+        request=UserDetailSerializer,
+        responses={200: UserDetailSerializer},
     )
     def put(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
-
-    @extend_schema(
-        description="Partially update the authenticated user's details.",
-        request=UserListSerializer,
-        responses={200: UserListSerializer},
-    )
-    def patch(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
 
 
 class SendEmailConfirmationView(viewsets.ViewSet):
