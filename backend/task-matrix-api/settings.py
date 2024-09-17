@@ -246,6 +246,21 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_BROKER_CONNECTION_RETRY = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
+SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL")
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
+CELERY_BROKER_URL = f"sqs://{AWS_ACCESS_KEY}:{AWS_SECRET_KEY}@"
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    "region": "eu-north-1",
+    "predefined_queues": {
+        "celery": {
+            "url": SQS_QUEUE_URL,
+            "access_key_id": AWS_ACCESS_KEY,
+            "secret_access_key": AWS_SECRET_KEY,
+        }
+    },
+}
+
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = True
 EMAIL_HOST = "smtp.gmail.com"
