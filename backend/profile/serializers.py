@@ -1,5 +1,8 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password, ValidationError
+from django.contrib.auth.password_validation import (
+    validate_password,
+    ValidationError
+)
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework import serializers
 
@@ -25,13 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
         return get_user_model().objects.create_user(**validated_data)
 
 
-class UserListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = ("id", "email", "full_name", "avatar_url", "bio")
-
-
-class UserDetailSerializer(UserListSerializer):
+class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ("id", "email", "full_name", "avatar_url", "bio")
@@ -47,7 +44,7 @@ class UserDetailSerializer(UserListSerializer):
         return user
 
 
-class UserGoogleSerializer(UserListSerializer):
+class UserGoogleSerializer(serializers.ModelSerializer):
     verified_email = serializers.BooleanField(
         source="email_is_verified", read_only=False
     )
@@ -66,3 +63,28 @@ class EmailConfirmationTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmailConfirmationToken
         fields = ("id", "user")
+
+
+class ResetPasswordRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(
+        min_length=8,
+        validators=[validate_password],
+        write_only=True,
+    )
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = ("id", "new_password", "confirm_password")
+
+    def validate_password(self, value):
+        try:
+
+            validate_password(value)
+        except ValidationError as e:
+            raise DRFValidationError(e.messages)
+        return value

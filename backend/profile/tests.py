@@ -11,7 +11,6 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APIClient, APITestCase
 
 from profile.models import image_file_path, EmailConfirmationToken
-from profile.serializers import UserDetailSerializer, UserSerializer
 
 User = get_user_model()
 
@@ -35,7 +34,10 @@ class AccountNotAuthenticatedUserTestCase(TestCase):
         response = self.client.post(url, payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["error"]["details"]["email"][0], "This field may not be blank.")
+        self.assertEqual(
+            response.data["error"]["details"]["email"][0],
+            "This field may not be blank.",
+        )
 
     @patch("profile.tasks.send_email.delay")
     def test_email_activation_link_send_when_profile_created(self, mock_send_email):

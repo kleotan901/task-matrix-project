@@ -11,6 +11,8 @@ from profile.views import (
     SendEmailConfirmationView,
     LogoutApi,
     GoogleUserProfile,
+    RequestPasswordReset,
+    ResetPassword,
 )
 
 app_name = "profile"
@@ -33,4 +35,10 @@ urlpatterns = [
     path("token/verify/", TokenVerifyView.as_view(), name="token-verify"),
     path("myprofile/", ManageUserView.as_view(), name="profile-manage"),
     path("logout/", LogoutApi.as_view(), name="logout"),
+    path("reset-password/", RequestPasswordReset.as_view(), name="reset-password"),
+    path(
+        "confirm-password/<str:token>/",
+        ResetPassword.as_view(),
+        name="confirm-password",
+    ),
 ]

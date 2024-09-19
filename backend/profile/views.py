@@ -1,6 +1,7 @@
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status, viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import logout, get_user_model
 from rest_framework.views import APIView
@@ -8,16 +9,17 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from profile.models import EmailConfirmationToken, User
+from profile.models import EmailConfirmationToken, User, PasswordReset
 from profile.serializers import (
     UserDetailSerializer,
-    UserListSerializer,
     UserSerializer,
     EmailConfirmationTokenSerializer,
-    UserGoogleSerializer
+    UserGoogleSerializer,
+    ResetPasswordRequestSerializer,
+    ResetPasswordSerializer,
 )
 
-from profile.tasks import send_email
+from profile.tasks import send_email, send_reset_password
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -169,3 +171,65 @@ class LogoutApi(APIView):
             {"message": "Logged out!"},
             status=status.HTTP_200_OK,
         )
+
+
+class RequestPasswordReset(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = ResetPasswordRequestSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.data["email"]
+        user = User.objects.filter(email__iexact=email).first()
+
+        if user:
+            token_generator = PasswordResetTokenGenerator()
+            token = token_generator.make_token(user)
+            reset = PasswordReset(email=email, token=token)
+            reset.save()
+
+            # Sending reset link via email
+            send_reset_password.delay(email, token)
+
+            return Response(
+                {"success": "We have sent you a link to reset your password"},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"error": "User with credentials not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+class ResetPassword(generics.GenericAPIView):
+    serializer_class = ResetPasswordSerializer
+
+    def post(self, request, token):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        new_password = data["new_password"]
+        confirm_password = data["confirm_password"]
+
+        if new_password != confirm_password:
+            return Response({"error": "Passwords do not match"}, status=400)
+
+        reset_obj = PasswordReset.objects.filter(token=token).first()
+
+        if not reset_obj:
+            return Response({"error": "Invalid token"}, status=400)
+
+        user = User.objects.filter(email=reset_obj.email).first()
+
+        if user:
+            user.set_password(request.data["new_password"])
+            user.save()
+
+            reset_obj.delete()
+
+            return Response({"success": "Password updated"})
+        else:
+            return Response({"error": "No user found"}, status=404)
