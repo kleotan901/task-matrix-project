@@ -9,11 +9,11 @@ aws_secret_key = settings.AWS_SECRET_KEY
 
 app = Celery(
     "task-matrix-api",
-    broker_url="sqs:",
+    broker_url="sqs://",
     broker_transport_options={
         "region": "eu-north-1", # your AWS SQS region
         "predefined_queues": {
-            "Celery": {  # the name of the SQS queue
+            "celery": {  # the name of the SQS queue
                 "url": sqs_queue_url,
                 "access_key_id": aws_access_key,
                 "secret_access_key": aws_secret_key,
