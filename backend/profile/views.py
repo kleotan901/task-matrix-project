@@ -3,7 +3,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from django.contrib.auth import logout, get_user_model
+from django.contrib.auth import logout
 from rest_framework.views import APIView
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -17,9 +17,12 @@ from profile.serializers import (
     UserGoogleSerializer,
     ResetPasswordRequestSerializer,
     ResetPasswordSerializer,
+    UserUpdateSerializer,
+    UserAvatarChangeOrDeleteSerializer,
 )
 
 from profile.tasks import send_email, send_reset_password
+from profile.utils import split_full_name
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -45,8 +48,12 @@ class ManageUserView(generics.RetrieveUpdateAPIView, generics.DestroyAPIView):
         return self.request.user
 
     def get_serializer_class(self):
-        if self.request.method in ("GET", "PUT"):
+        if self.request.method == "GET":
             return UserDetailSerializer
+        if self.request.method == "PUT":
+            return UserUpdateSerializer
+        if self.request.method == "PATCH":
+            return UserAvatarChangeOrDeleteSerializer
         return UserSerializer
 
     @extend_schema(
@@ -57,11 +64,19 @@ class ManageUserView(generics.RetrieveUpdateAPIView, generics.DestroyAPIView):
         return super().retrieve(request, *args, **kwargs)
 
     @extend_schema(
-        description="Update the authenticated user's details.",
-        request=UserDetailSerializer,
-        responses={200: UserDetailSerializer},
+        description="Update full name or/and password",
+        request=UserUpdateSerializer,
+        responses={200: UserUpdateSerializer},
     )
     def put(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @extend_schema(
+        description="Change or delete avatar",
+        request=UserAvatarChangeOrDeleteSerializer,
+        responses={200: UserAvatarChangeOrDeleteSerializer},
+    )
+    def patch(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
 
@@ -140,10 +155,13 @@ class GoogleUserProfile(APIView):
                 "email_is_verified": user_info.get("verified_email"),
             },
         )
+        split_full_name(user, user.full_name)
 
         # If user already exists, update the necessary fields
         if not created:
             user.full_name = user_info.get("full_name")
+            if user.full_name:
+                split_full_name(user, user.full_name)
             user.avatar_url = user_info.get("avatar_url")
             user.email_is_verified = user_info.get("verified_email")
             user.save()
