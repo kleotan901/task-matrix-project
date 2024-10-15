@@ -1,12 +1,23 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import (
-    validate_password,
-    ValidationError
-)
+from django.contrib.auth.password_validation import validate_password, ValidationError
 from rest_framework.exceptions import ValidationError as DRFValidationError
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.response import Response
 
-from profile.models import EmailConfirmationToken
+from profile.models import EmailConfirmationToken, SubscriptionHistory
+from profile.utils import split_full_name
+
+
+class PlanAndSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionHistory
+        fields = ("id", "user", "subscription_type", "price")
+
+
+class SubscriptionHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionHistory
+        fields = ("id", "user", "payment_date", "subscription_type", "price", "status")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,29 +36,101 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create a new user with encrypted password and return it"""
-        return get_user_model().objects.create_user(**validated_data)
+        full_name = validated_data.pop("full_name", None)
+        user = get_user_model().objects.create_user(**validated_data)
+        if full_name:
+            split_full_name(user, full_name)
+        user.save()
+
+        return user
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
+    # full_name = serializers.CharField(source="get_full_name", read_only=True)
+    plan_and_subscription = serializers.SerializerMethodField()
+    subscription_history = SubscriptionHistorySerializer(read_only=True, many=True)
+
     class Meta:
         model = get_user_model()
-        fields = ("id", "email", "full_name", "avatar_url", "bio")
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "mobile_phone",
+            "avatar_url",
+            "plan_and_subscription",
+            "subscription_history",
+        )
+
+    def get_plan_and_subscription(self, obj):
+        return [{plan: price} for plan, price in SubscriptionHistory.PRICES.items()]
+
+
+class UserUpdateSerializer(UserSerializer):
+    email = serializers.CharField(read_only=True)
+    current_password = serializers.CharField(write_only=True, required=False)
+    new_password = serializers.CharField(
+        write_only=True, required=False, validators=[validate_password]
+    )
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "mobile_phone",
+            "current_password",
+            "new_password",
+        )
+
+    def validate_current_password(self, value):
+        user = self.context.get("request").user
+        if not user.check_password(value):
+            raise serializers.ValidationError(
+                "Your old password was entered incorrectly. Please try again."
+            )
+
+        return value
 
     def update(self, instance, validated_data):
-        """Update a user, set the password correctly and return it"""
-        password = validated_data.pop("password", None)
-        user = super().update(instance, validated_data)
-        if password:
-            user.set_password(password)
-            user.save()
+        """Update a user's full name and/or change the password"""
+        current_password = validated_data.pop("current_password", None)
+        new_password = validated_data.pop("new_password", None)
+        first_name = validated_data.pop("first_name", None)
+        last_name = validated_data.pop("last_name", None)
+        mobile_phone = validated_data.pop("mobile_phone", None)
+        if first_name:
+            instance.first_name = first_name
+        if last_name:
+            instance.last_name = last_name
+        if current_password:
+            if new_password:
+                instance.set_password(new_password)
+        if mobile_phone:
+            instance.mobile_phone = mobile_phone
+        instance.save()
+        return super().update(instance, validated_data)
 
-        return user
+
+class UserAvatarChangeOrDeleteSerializer(UserSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ("id", "avatar_url")
+
+    def update(self, instance, validated_data):
+        instance.avatar_url = validated_data.get("avatar_url")
+        instance.save()
+        return super().update(instance, validated_data)
 
 
 class UserGoogleSerializer(serializers.ModelSerializer):
     verified_email = serializers.BooleanField(
         source="email_is_verified", read_only=False
     )
+    full_name = serializers.CharField(source="get_full_name", read_only=True)
 
     class Meta:
         model = get_user_model()
@@ -83,8 +166,7 @@ class ResetPasswordSerializer(serializers.Serializer):
 
     def validate_password(self, value):
         try:
-
             validate_password(value)
-        except ValidationError as e:
-            raise DRFValidationError(e.messages)
+        except ValidationError as err:
+            raise DRFValidationError(err.messages)
         return value
