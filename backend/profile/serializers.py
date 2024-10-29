@@ -8,6 +8,7 @@ from profile.models import EmailConfirmationToken, SubscriptionHistory
 from profile.utils import split_full_name
 from project.models import Project
 from task.models import Task
+from payment.models import Payment
 
 
 class PlanAndSubscriptionSerializer(serializers.ModelSerializer):
@@ -72,7 +73,15 @@ class UserDetailSerializer(serializers.ModelSerializer):
         )
 
     def get_plan_and_subscription(self, obj) -> list:
-        return [{plan: price} for plan, price in SubscriptionHistory.PRICES.items()]
+        result_dict = [{plan: price} for plan, price in SubscriptionHistory.PRICES.items()]
+        result_dict[1]["payment_url_premium"] = Payment.objects.get(
+          user=obj, payment_type="premium"
+        ).session_url
+        result_dict[2]["payment_url_profi"] = Payment.objects.get(
+          user=obj, payment_type="profi"
+        ).session_url
+        
+        return result_dict
 
     def get_projects_number(self, obj) -> int:
         count_projects = Project.objects.filter(user=obj).count()
@@ -118,7 +127,7 @@ class UserUpdateSerializer(UserSerializer):
         return value
 
     def update(self, instance, validated_data):
-        """Update a user's full name and/or change the password"""
+        """Update a user's data"""
         current_password = validated_data.pop("current_password", None)
         new_password = validated_data.pop("new_password", None)
         first_name = validated_data.pop("first_name", None)
