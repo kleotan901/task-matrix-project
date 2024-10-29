@@ -53,9 +53,11 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "django.contrib.sites",
     "drf_spectacular",
+    "django_celery_beat",
     "profile",
     "task",
     "project",
+    "payment",
 ]
 
 SITE_ID = 1
@@ -171,7 +173,7 @@ AUTH_USER_MODEL = "profile.User"
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = "email"
 
-BASE_API_URL = "http://localhost:8000/"
+BASE_API_URL = "http://localhost:8080/"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -246,10 +248,8 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_BROKER_CONNECTION_RETRY = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
-SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL")
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
-AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
-CELERY_BROKER_URL = "sqs://"
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = True
@@ -259,3 +259,6 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 ACTIVATION_LINK = f"{os.getenv('DOMAIN')}api/profile/email-verification/?token_id="
+
+STRIPE_TEST_SECRET_KEY = "sk_test_51QCwbDDYTgi70nud2obIsvPgQ9rYXzfaUFN3lR6wandTVco3yEl1TnWs2QSR8XzP4sYF6SY69VTIG15693cMMWff00ahX4MByC"
+HOME_DOMAIN = os.getenv("DOMAIN")

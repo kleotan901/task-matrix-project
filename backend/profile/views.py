@@ -23,6 +23,8 @@ from profile.serializers import (
 
 from profile.tasks import send_email, send_reset_password
 from profile.utils import split_full_name
+from payment.stripe import create_checkout_session
+from payment.models import Payment
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -35,6 +37,23 @@ class CreateUserView(generics.CreateAPIView):
 
         token = EmailConfirmationToken.objects.create(user=user)
         send_email.delay(user.email, token.id, user.id)
+
+        session = create_checkout_session(user)
+        
+        Payment.objects.create(
+          user=user,
+          session_url=session[0].url,
+          session_id=session[0].id,
+          payment_type="premium",
+          status="PENDING"
+        )
+        Payment.objects.create(
+          user=user,
+          session_url=session[1].url,
+          session_id=session[1].id,
+          payment_type="profi",
+          status="PENDING"
+        )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

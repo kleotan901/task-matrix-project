@@ -29,6 +29,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/profile/", include("profile.urls", namespace="profile")),
     # path("auth/social/google/", GoogleLogin.as_view(), name="google-login"),
+    path("api/", include("payment.urls", namespace="payments")),
     path("api/", include("task.urls", namespace="tasks")),
     path("api/", include("project.urls", namespace="projects")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
