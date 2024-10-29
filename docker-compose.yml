@@ -1,0 +1,67 @@
+version: "3"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: backend_container
+    ports:
+      - "8080:8080"
+    volumes:
+      - /app
+      - .media:/vol/web/media
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8080"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    env_file:
+      - ./backend/.env
+  
+  redis:
+    image: "redis:alpine"
+
+  celery:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: >
+      sh -c "celery -A task-matrix-api worker --loglevel=info"
+    depends_on:
+      - backend
+      - redis
+      - db
+    restart: on-failure
+    env_file:
+      - ./backend/.env
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: >
+      sh -c "celery -A task-matrix-api beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    depends_on:
+      - backend
+      - redis
+      - db
+    restart: on-failure
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build:
+      context: ./frontend/app
+    container_name: frontend_container
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080  # URL API for frontend should be added to .env file
