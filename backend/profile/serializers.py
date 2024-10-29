@@ -6,6 +6,8 @@ from rest_framework.response import Response
 
 from profile.models import EmailConfirmationToken, SubscriptionHistory
 from profile.utils import split_full_name
+from project.models import Project
+from task.models import Task
 
 
 class PlanAndSubscriptionSerializer(serializers.ModelSerializer):
@@ -49,10 +51,16 @@ class UserDetailSerializer(serializers.ModelSerializer):
     # full_name = serializers.CharField(source="get_full_name", read_only=True)
     plan_and_subscription = serializers.SerializerMethodField()
     subscription_history = SubscriptionHistorySerializer(read_only=True, many=True)
+    projects_number = serializers.SerializerMethodField()
+    tasks_number = serializers.SerializerMethodField()
+    couch_calls_number = serializers.SerializerMethodField()
 
     class Meta:
         model = get_user_model()
         fields = (
+            "projects_number",
+            "tasks_number",
+            "couch_calls_number",
             "id",
             "email",
             "first_name",
@@ -63,8 +71,20 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "subscription_history",
         )
 
-    def get_plan_and_subscription(self, obj):
+    def get_plan_and_subscription(self, obj) -> list:
         return [{plan: price} for plan, price in SubscriptionHistory.PRICES.items()]
+
+    def get_projects_number(self, obj) -> int:
+        count_projects = Project.objects.filter(user=obj).count()
+        return count_projects
+
+    def get_tasks_number(self, obj) -> int:
+        tasks_number = Task.objects.filter(user=obj).count()
+        return tasks_number
+
+    def get_couch_calls_number(self, obj) -> int:
+        couch_calls_number = 0  # TODO
+        return couch_calls_number
 
 
 class UserUpdateSerializer(UserSerializer):
@@ -73,6 +93,7 @@ class UserUpdateSerializer(UserSerializer):
     new_password = serializers.CharField(
         write_only=True, required=False, validators=[validate_password]
     )
+    plan_and_subscription = serializers.CharField(required=False)
 
     class Meta:
         model = get_user_model()
@@ -84,6 +105,7 @@ class UserUpdateSerializer(UserSerializer):
             "mobile_phone",
             "current_password",
             "new_password",
+            "plan_and_subscription",
         )
 
     def validate_current_password(self, value):
@@ -102,15 +124,27 @@ class UserUpdateSerializer(UserSerializer):
         first_name = validated_data.pop("first_name", None)
         last_name = validated_data.pop("last_name", None)
         mobile_phone = validated_data.pop("mobile_phone", None)
-        if first_name:
-            instance.first_name = first_name
-        if last_name:
-            instance.last_name = last_name
+        plan_and_subscription = validated_data.pop("plan_and_subscription", None)
+
+        instance.first_name = first_name
+        instance.last_name = last_name
+        instance.mobile_phone = mobile_phone
         if current_password:
             if new_password:
                 instance.set_password(new_password)
-        if mobile_phone:
-            instance.mobile_phone = mobile_phone
+        if plan_and_subscription:
+            previous_record = (
+                SubscriptionHistory.objects.filter(user=instance)
+                .order_by("-payment_date")
+                .first()
+            )
+            if previous_record:
+                previous_record.status = False
+                previous_record.save()
+
+            new_record = SubscriptionHistory.objects.create(
+                user=instance, subscription_type=plan_and_subscription, status=True
+            )
         instance.save()
         return super().update(instance, validated_data)
 

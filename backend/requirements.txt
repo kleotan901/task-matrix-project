@@ -48,7 +48,7 @@ pillow==10.4.0
 platformdirs==4.2.2
 prompt_toolkit==3.0.47
 protobuf==5.28.0
-psycopg2==2.9.9
+#psycopg2==2.9.9
 psycopg2-binary==2.9.9
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
@@ -80,3 +80,4 @@ uritemplate==4.1.1
 urllib3==1.26.20
 vine==5.1.0
 wcwidth==0.2.13
+stripe==11.1.1
