@@ -1,0 +1,190 @@
+@import './utils/vars';
+
+.register-page {
+  display: flex;
+
+  &__container {
+    padding-top: 40px;
+    width: 59%;
+  }
+
+  &__logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 122px;
+  }
+
+  &__title {
+    // display: flex;
+    // justify-content: center;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 130%;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    font-family: 'Montserrat', sans-serif;
+    margin-bottom: 40px;
+    margin-left: 115px;
+    margin-right: 115px;
+  }
+
+  &__label {
+    font-size: 22px;    
+    font-weight: 400;
+    line-height: 125%;
+    margin-bottom: 10px;
+    color: $color_text_for_disabled;
+
+    &--disabled {
+      color: $color_input_for_disabled;
+      cursor: not-allowed;
+    }
+
+    &--small {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 115%;
+    }
+  }
+
+  &__input {
+    font-family: inherit;
+    height: 55px;
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid $color_grey;
+    margin-bottom: 20px;
+    color: $color_text_for_disabled;
+    font-size: 18px;
+
+    &::placeholder {
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 115%;
+      color: $color_grey;
+    }
+
+    &:active {
+      border: 1px solid $color_text_for_disabled;
+    }
+
+    &:focus {
+      border: 1px solid $color_text_for_disabled;
+    }
+
+    &:disabled {
+      border: 1px solid $color_input_for_disabled;
+      color: $color_input_for_disabled;
+      cursor: not-allowed;
+    }
+  }
+
+  &__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 55px;
+    border-radius: 9px;
+    border: none;
+    cursor: pointer;
+    font-family: "Montserrat", sans-serif;
+    font-size: 22px;
+    line-height: 125%;
+    transition: background-color 0.3s color 0.3;
+
+    &--continue {
+      margin-top: 10px;
+      margin-bottom: 20px;
+      background-color: $color_softBluePurple;
+      color: $color_white;
+
+      &:hover {
+        background-color: $color_for_hover;
+      }
+
+      &:disabled {
+        background-color: $color_for_disabled;
+        color: $color_text_for_disabled;
+        cursor: not-allowed;
+      }
+    }
+
+    &--submit {
+      margin-top: 10px;
+      background-color: $color_softBluePurple;
+      color: $color_white;
+
+      &:hover {
+        background-color: $color_for_hover;
+      }
+
+      &:disabled {
+        background-color: $color_for_disabled;
+        color: $color_text_for_disabled;
+        cursor: not-allowed;
+      }
+
+    }
+
+    &--google {
+      background-color: $color_white;
+      color: $color_text_for_disabled;
+      border: 1px solid $color_text_for_disabled;
+
+      &:hover {
+        background-color: $color_hover_for_google;
+        border: 1px solid $color_hover_for_google;
+      }
+
+    }
+  }
+
+  &__terms {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 115%;    
+    text-align: center;
+    margin-bottom: 50px;
+  }
+
+  &__login {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 115%;    
+    text-align: center;
+    margin-bottom: 197px;
+  }
+
+  &__url {
+    text-decoration: none;
+    color: $color_for_links;
+  }
+
+  &__checkbox {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  &__checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px
+  }
+
+  &__checkbox-input {
+    width: 35px;
+    height: 35px;
+  }
+}

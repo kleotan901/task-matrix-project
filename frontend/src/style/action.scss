@@ -1,0 +1,18 @@
+@import "./utils/vars";
+
+.action {
+  margin: 70px 0 70px 0;
+  padding-top: 65px;
+  padding-bottom: 67px;
+  background: linear-gradient(90deg, $color_softBluePurple 33%, $color_for_gradient 100%);
+
+
+  &__title {
+    margin-bottom: 26px;
+  }
+
+  &__button {
+    display: flex;
+    justify-content: center;
+  }
+}

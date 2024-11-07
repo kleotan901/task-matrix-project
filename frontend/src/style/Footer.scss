@@ -1,0 +1,28 @@
+@import "./utils/vars";
+
+.footer {
+  border-top: 1px solid $color_softBluePurple;
+  padding: 25px 0;
+
+  &__content {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  &__list {
+    display: flex;
+    gap: 80px;
+  }
+  
+  &__item {
+    list-style: none;
+    padding: 13px 0;
+  }
+
+  &__link {
+    color: $color_black;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 22px;
+    text-decoration: none;
+  }
+}
