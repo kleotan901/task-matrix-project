@@ -4,5 +4,5 @@
 
 - `cd task-matrix-project`
 - in the backend directory rename file ***.env.sample*** to ***.env***
-- run `docker-compose up`
+- run `docker-compose up --build`
 
