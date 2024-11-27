@@ -4,7 +4,7 @@ import { Context, googleAuthProvider } from "../../firebase";
 import { NavLink, useNavigate } from "react-router-dom";
 import { LANDING_PAGE_ROUTE, LOGIN_ROUTE, PROFILE_ROUTE } from "../../utils/const";
 import { UserData } from "../../type/UserData";
-
+import { apiPost } from "../../utils/api"; // модуль API
 import "../../style/register-page.scss";
 import googleIcon from "../../icons/flat-color-icons_google.png";
 
@@ -23,9 +23,7 @@ const RegisterPage: React.FC = () => {
   const [isEmailSubmitted, setIsEmailSubmitted] = useState(false);
 
   useEffect(() => {
-    if (!firebaseContext) {
-      return;
-    }
+    if (!firebaseContext) return;
 
     const storedUserData = localStorage.getItem('userData');
     if (storedUserData) {
@@ -42,22 +40,10 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
-    const { auth } = firebaseContext;
-
     try {
+      const { auth } = firebaseContext;
       const result = await signInWithPopup(auth, googleAuthProvider);
       const user: User = result.user;
-
-      setFormData({
-        email: user.email || '',
-        full_name: user.displayName || '',
-        password: '',
-        avatar_url: user.photoURL || '',
-        verified_email: user.emailVerified
-      });
-
-      setIsGoogleSignUp(true);
-      setIsEmailSubmitted(true);
 
       const userData: UserData = {
         email: user.email || '',
@@ -66,40 +52,28 @@ const RegisterPage: React.FC = () => {
         verified_email: user.emailVerified
       };
 
+      setFormData(userData);
+      setIsGoogleSignUp(true);
+      setIsEmailSubmitted(true);
+
       localStorage.setItem('userData', JSON.stringify(userData));
 
-      // Надсилання POST-запиту до вашого серверу
-      try {
-        const response = await fetch('http://13.60.234.72/api/profile/google/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userData),
-        });
-
-        if (response.ok) {
-          navigate(PROFILE_ROUTE);
-        } else {
-          const result = await response.json();
-          alert(result.message || 'Щось пішло не так');
-        }
-      } catch (error) {
-        console.error('Error during registration:', error);
+      // Надсилання POST-запиту до серверу
+      const response = await apiPost('/api/profile/google/', userData);
+      if (response.ok) {
+        navigate(PROFILE_ROUTE);
+      } else {
+        alert(response.message || 'Щось пішло не так');
       }
-
     } catch (error) {
       console.error('Error during sign in with popup:', error);
     }
   };
 
-  // Функція обробки змін полів форми
+  // Обробка зміни полів форми
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
+    setFormData(prevState => ({ ...prevState, [name]: value }));
   };
 
   // Стандартна реєстрація через email
@@ -114,34 +88,17 @@ const RegisterPage: React.FC = () => {
     }
 
     const userData = isGoogleSignUp
-      ? {
-          email,
-          full_name,
-          avatar_url: formData.avatar_url,
-          emailVerified: formData.verified_email
-        }
-      : {
-          email,
-          full_name,
-          password: formData.password 
-        };
+      ? { email, full_name, avatar_url: formData.avatar_url, emailVerified: formData.verified_email }
+      : { email, full_name, password: formData.password };
 
     localStorage.setItem('userData', JSON.stringify(userData));
 
     try {
-      const response = await fetch('http://13.60.234.72/api/profile/register/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
+      const response = await apiPost('/api/profile/register/', userData);
       if (response.ok) {
         navigate(PROFILE_ROUTE);
       } else {
-        const result = await response.json();
-        alert(result.message || 'Щось пішло не так');
+        alert(response.message || 'Щось пішло не так');
       }
     } catch (error) {
       console.error('Error during registration:', error);
@@ -162,16 +119,12 @@ const RegisterPage: React.FC = () => {
           Зареєструйся і почни <br />працювати безкоштовно
         </h2>
         <form onSubmit={handleSubmit} className="register-page__form">
-          {/* Поле для введення Email */}
-          <label 
-            htmlFor="email" 
-            className={`register-page__label ${isEmailSubmitted ? 'register-page__label--disabled' : ''}`}
-          >
+          <label htmlFor="email" className={`register-page__label ${isEmailSubmitted ? 'register-page__label--disabled' : ''}`}>
             Email
           </label>
           <input
             className="register-page__input register-page__input--email"
-            type="text"
+            type="email"
             id="email"
             placeholder="Введіть Email"
             name="email"
@@ -180,13 +133,9 @@ const RegisterPage: React.FC = () => {
             required
             disabled={isEmailSubmitted}
           />
-
-          {/* Показувати додаткові поля після введення Email */}
           {isEmailSubmitted && (
             <>
-              <label htmlFor="full_name" className="register-page__label">
-                Ім'я
-              </label>
+              <label htmlFor="full_name" className="register-page__label">Ім'я</label>
               <input
                 className="register-page__input register-page__input--name"
                 type="text"
@@ -197,63 +146,41 @@ const RegisterPage: React.FC = () => {
                 onChange={handleChange}
                 required
               />
-
-              {/* Пароль не потрібен для Google SignUp */}
               {!isGoogleSignUp && (
                 <>
-                <label htmlFor="password" className="register-page__label">
-                  Пароль
-                </label>
-                <input
-                  className="register-page__input register-page__input--password"
-                  type="password"
-                  placeholder="Вкажіть пароль"
-                  name="password"
-                  id="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
+                  <label htmlFor="password" className="register-page__label">Пароль</label>
+                  <input
+                    className="register-page__input register-page__input--password"
+                    type="password"
+                    placeholder="Вкажіть пароль"
+                    name="password"
+                    id="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
                 </>
               )}
-
-              {/* Попередження для Google реєстрації, якщо email не підтверджений */}
-              {isGoogleSignUp && (
-                <p className="register-page__warning">{!formData.verified_email && 'Email не підтверджено'}</p>
-              )}
-
-              {/* Кнопка реєстрації */}
-              <button 
-                type="submit" 
-                className="register-page__button register-page__button--submit"
-                disabled={!formData.full_name || !formData.password}
-              >
+              <button type="submit" className="register-page__button register-page__button--submit">
                 Зареєструватися
               </button>
             </>
           )}
-
-          {/* Кнопка для продовження після введення Email */}
           {!isEmailSubmitted && (
             <button 
               type="button" 
-              onClick={() => setIsEmailSubmitted(true)}
-              className="register-page__button register-page__button--continue"
-              disabled={!formData.email}
-            >
+              onClick={() => setIsEmailSubmitted(true)} 
+              className="register-page__button register-page__button--continue" 
+              disabled={!formData.email}>
               Продовжити
             </button>
           )}
-
-          {/* Кнопка для реєстрації через Google */}
           {!isGoogleSignUp && !isEmailSubmitted && (
             <button 
               type="button" 
-              onClick={registerWithGoogle}
-              className="register-page__button register-page__button--google"
-            >
-              <img src={googleIcon} alt="google" />
-              Продовжити з Google
+              onClick={registerWithGoogle} 
+              className="register-page__button register-page__button--google">
+              <img src={googleIcon} alt="google" /> Продовжити з Google
             </button>
           )}
         </form>

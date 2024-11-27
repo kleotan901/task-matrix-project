@@ -48,14 +48,14 @@ const LoginPage = () => {
         verified_email: user.emailVerified,
       };
 
-      // Зберігаємо дані користувача у локальне сховище
+      // Збереження даних користувача у локальне сховище
       if (rememberMe) {
         localStorage.setItem('userData', JSON.stringify(userData));
       } else {
         sessionStorage.setItem('userData', JSON.stringify(userData));
       }
 
-      // Надсилання POST-запиту до вашого серверу для логіну
+      //POST-запит вашого серверу для логіну
       try {
         const response = await fetch('http://13.60.234.72/api/profile/login/', {
           method: 'POST',
