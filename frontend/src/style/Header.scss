@@ -1,0 +1,122 @@
+@import './utils/vars';
+
+.header {
+  border-bottom: 1px solid $color_skyBlue;
+  padding: 30px 0;
+
+  &__content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__button {
+    display: flex;
+    gap: 20px;
+  }
+}
+
+.button {
+  display: inline-block;
+  padding: 15px 25px;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background-color 0.3s color 0.3;
+  
+  &--softBluePurple {
+    background-color: $color_softBluePurple;
+    border: 1px solid $color_skyBlue;
+
+    &:hover {
+      background-color: $color_for_hover;
+    }
+  }
+
+  &--softRose {
+    background-color: $color_softRose;
+    border: 1px solid $color_softRose;
+  }
+
+  &--skyBlue {
+    background-color: $color_skyBlue;
+    border: 1px solid $color_skyBlue;
+
+    &:hover {
+      background-color: $color_hover_for_skyBlue;
+      border: 1px solid $color_hover_for_skyBlue;
+    }
+  }
+
+  &--forStart {
+    background-color: $color_for_buttonStart;
+    border: 1px solid $color_white;
+    color: $color_white;
+
+    &:hover {
+      color: $color_black;
+      background-color: $color_white;
+    }
+  }
+
+  &--white {
+    background-color: $color_white;
+    border: 1px solid $color_black;
+    color: $color_black;
+
+    &:hover {
+      color: $color_white;
+      background-color: $color_black;
+    }
+  }
+
+  &--padding-114 {
+    padding: 14px 114px;
+  }
+  &--padding-139 {
+    padding: 14px 139px;
+  }
+
+  &--width-100 {
+    width: 100%;
+    text-align: center;
+  }
+
+  &--border-white {
+    border: 1px solid $color_white;
+  }
+}
+
+.logo {
+  font-family: "Montserrat", sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  border: 2px solid $color_softBluePurple;
+  padding: 6px 17px;
+  border-radius: 5px;
+  height: 44px;
+  width: 136px;
+
+  &__link {
+    text-decoration: none;
+    color: $color_softBluePurple;
+  }
+}
+
+.link {
+  font-family: "Montserrat", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.3s;
+
+  &--text-black {
+    color: $color_black;
+
+    &:hover {
+      color: $color_white;
+    }
+  }
+  &--text-white {
+    color: $color_white;
+  }
+}

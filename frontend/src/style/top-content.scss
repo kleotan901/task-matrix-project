@@ -1,0 +1,103 @@
+@import './utils/vars';
+
+.top-content {
+  padding-top: 42px;
+
+  &__title {
+    margin-bottom: 20px;
+  }
+
+  &__description {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 130%;
+    margin-bottom: 42px;
+
+  }
+
+  &__button {
+    margin-bottom: 50px;
+  }
+
+  &__pictures {
+    // display: grid;
+    // grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    // flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+
+    margin-bottom: 70px;
+  }
+
+  &__picture {
+    height: 415px;
+    width: 427px;
+    border-radius: 11px;
+    padding: 78px 62px;
+
+    &--padding-for-circle  {
+      padding: 63px 68.5px;
+    }
+
+    &--padding-for-checkmark  {
+      padding: 104.5px 74.5px;
+    }
+  
+    &--softBluePurple {
+      background: $background_gradient;
+    }
+
+    &--softBluePurple-2 {
+      background: $color_softBluePurple;
+    }
+
+    &--skyBlue {
+      background: $background;
+    }
+
+    &--sunYellow {
+      background: $background_sunYellow;
+    }
+
+    &--inner-square {
+      height: 100%;
+      width: 100%;
+      border-radius: 6px;
+      background-color: $color_softRose;
+    }
+
+    &--inner-circle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 289px;
+      width: 289px;
+      border-radius: 50%;
+    }
+
+    &--inner-checkmark {
+      background-image: url(../icons/checkmark.svg);
+      background-repeat: no-repeat;
+      background-size: contain;
+      height: 100%;
+    }
+  }
+}
+
+.title {
+  font-family: "Montserrat", sans-serif;
+  font-size: 60px;
+  line-height: 120%;
+  font-weight: 700;
+
+  &--white {
+    color: $color_white;
+  }
+
+  &--center {
+    text-align: center;
+  }
+}

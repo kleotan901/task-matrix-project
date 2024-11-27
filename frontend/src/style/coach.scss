@@ -1,0 +1,153 @@
+@import './utils/vars';
+
+.coach {
+  padding-top: 70px;
+  padding-bottom: 70px;
+
+  &__title {
+    margin-bottom: 31px;
+  }
+
+  &__description {
+    display: flex;
+    gap: 84px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 125%;
+    margin-bottom: 98px;
+  }
+
+  &__text {
+    width: 503px;
+  }
+
+  &__price-items {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  &__price-item {
+    border: 1px solid $color_black;
+    border-radius: 9px;
+    padding: 40px 25px 40px 25px;
+
+  }
+
+}
+
+.price-item {
+  &__title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 24px;
+    padding: 10px 20px;
+    margin-bottom: 23px;
+
+    &--white {
+      background-color: $color_white;
+      color: $color_black;
+      width: max-content;
+      border: 1px solid $color_black;
+      border-radius: 8px;
+      padding: 8px 18px;
+    }
+
+    &--softRose {
+      background-color: $color_softRose;
+      color: $color_white;
+      width: max-content;
+      border-radius: 8px;
+    }
+
+    &--skyBlue {
+      background-color: $color_skyBlue;
+      color: $color_white;
+      width: max-content;
+      border-radius: 8px;
+
+    }
+
+    &--softBluePurple {
+      background-color: $color_softBluePurple;
+      color: $color_white;
+      width: max-content;
+      border-radius: 8px;
+
+    }
+  }
+
+  &__description {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 125%;
+    margin-left: 5px;
+    margin-bottom: 13px;
+  }
+
+  &__anagraph {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 22px;
+    font-weight: 300;
+    line-height: 125%;
+    margin-left: 5px;
+
+  }
+
+  &__price {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 60px;
+    line-height: 120%;
+    margin-left: 5px;
+    margin-bottom: 8px;
+
+    &--softRose {
+      color: $color_softRose;
+    }
+
+    &--skyBlue {
+      color: $color_skyBlue;
+    }
+
+    &--softBluePurple {
+      color: $color_softBluePurple;
+    }
+  }
+
+  &__button {
+    margin: 0 5px 30px;
+  }
+
+  &__list {
+    height: 170px;
+    border-bottom: 1px solid $color_black;
+    margin-left: 5px;
+    margin-bottom: 30px;
+
+  }
+
+  &__features {
+    list-style: "✔";
+    padding-left: 20px;
+  }
+
+  &__feature {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 125%;
+    margin-bottom: 15px;
+    padding-left: 13px;
+    color: $color_black;
+  }
+
+  &__icon {
+    display: flex;
+    width: 50px;
+    height: 50px;
+    background-color: #F0F0F0;
+    margin: 0 auto 30px;
+  }
+}

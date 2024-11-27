@@ -1,0 +1,12 @@
+@import './utils/vars';
+@import './Header.scss';
+
+* {
+  margin: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+.wrapper {
+  margin: 0 60px;
+}
