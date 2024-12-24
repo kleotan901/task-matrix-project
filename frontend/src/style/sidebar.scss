@@ -1,0 +1,10 @@
+@import './utils/vars';
+
+.sidebar {
+  &__profile {
+    height: 66px;
+    width: 256px;
+    border: 1px solid  $color_text_for_disabled;
+    border-radius: 26px;
+  }
+}

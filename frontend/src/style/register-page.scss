@@ -84,6 +84,15 @@
       color: $color_input_for_disabled;
       cursor: not-allowed;
     }
+
+    &--error {
+      border: 1px solid $color_for_error;
+    }
+  }
+
+  &__error {
+    color: $color_for_error;
+    font-size: 16Spx;
   }
 
   &__button {
