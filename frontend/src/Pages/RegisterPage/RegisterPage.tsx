@@ -4,9 +4,10 @@ import { Context, googleAuthProvider } from "../../firebase";
 import { NavLink, useNavigate } from "react-router-dom";
 import { LANDING_PAGE_ROUTE, LOGIN_ROUTE, PROFILE_ROUTE } from "../../utils/const";
 import { UserData } from "../../type/UserData";
-import { apiPost } from "../../utils/api"; // модуль API
 import "../../style/register-page.scss";
 import googleIcon from "../../icons/flat-color-icons_google.png";
+import { Slider } from "../../Components/Slider";
+import { postUserEmail, postUserGoodle } from "../../utils/api";
 
 const RegisterPage: React.FC = () => {
   const firebaseContext = useContext(Context);
@@ -21,6 +22,9 @@ const RegisterPage: React.FC = () => {
 
   const [isGoogleSignUp, setIsGoogleSignUp] = useState(false);
   const [isEmailSubmitted, setIsEmailSubmitted] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [nameError, setNameError] = useState('');
 
   useEffect(() => {
     if (!firebaseContext) return;
@@ -58,53 +62,106 @@ const RegisterPage: React.FC = () => {
 
       localStorage.setItem('userData', JSON.stringify(userData));
 
-      // Надсилання POST-запиту до серверу
-      const response = await apiPost('/api/profile/google/', userData);
+      const response = await postUserGoodle(userData); // Викликаємо функцію для реєстрації через email
+    
       if (response.ok) {
         navigate(PROFILE_ROUTE);
       } else {
-        alert(response.message || 'Щось пішло не так');
+        alert(response.result || `Код помилки: ${response.status}`);
       }
-    } catch (error) {
-      console.error('Error during sign in with popup:', error);
-    }
+      } catch (error) {
+        console.error("Помилка під час реєстрації:", error);
+        alert("Сталася помилка. Спробуйте ще раз пізніше.");
+      }
   };
 
   // Обробка зміни полів форми
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = event.target;
     setFormData(prevState => ({ ...prevState, [name]: value }));
+
+    if (name === 'password' && passwordError) {
+      if (validatePassword(value)) {
+        setPasswordError('');
+      }
+    }
+
+    if (name === 'email' && emailError) {
+      if (validateEmail(value)) {
+        setEmailError('');
+      }
+    }
+  
+    if (name === 'full_name' && nameError) {
+      if (validateName(value)) {
+        setNameError('');
+      }
+    }
   };
 
-  // Стандартна реєстрація через email
+  const validatePassword = (password: string): boolean => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+  
+  const validateName = (name: string): boolean => {
+    return name.trim().length >= 2;
+  };
+  
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
-    const { email, full_name } = formData;
-
-    if (!email || !full_name) {
+  
+    const { email, full_name, password } = formData;
+  
+    /* if (!email || !full_name) {
       alert("Будь ласка, заповніть усі обов'язкові поля.");
+      return;
+    }*/
+
+    if (!validateEmail(email)) {
+      setEmailError("Введіть коректний Email.");
+      return;
+    }
+  
+    // Перевірка імені
+    if (!validateName(full_name)) {
+      setNameError("Ім'я має містити щонайменше 2 символи.");
       return;
     }
 
+    if (!validatePassword(password as string)) {
+      setPasswordError("Пароль має бути не менше 8 символів і містити хоча б одну цифру, одну велику і малу літери, а також один спеціальний символ.");
+      return;
+    }
+  
     const userData = isGoogleSignUp
       ? { email, full_name, avatar_url: formData.avatar_url, emailVerified: formData.verified_email }
       : { email, full_name, password: formData.password };
-
+  
     localStorage.setItem('userData', JSON.stringify(userData));
-
+  
     try {
-      const response = await apiPost('/api/profile/register/', userData);
+      const response = await postUserEmail(userData);
+   
       if (response.ok) {
-        navigate(PROFILE_ROUTE);
+          navigate(PROFILE_ROUTE);
+      } else if (response.status === 400) {
+        setEmailError("Такий акаунт уже існує.");
       } else {
-        alert(response.message || 'Щось пішло не так');
+          alert(response.result || `Код помилки: ${response.status}`);
       }
-    } catch (error) {
-      console.error('Error during registration:', error);
-    }
+   } catch (error) {
+      console.error("Помилка під час реєстрації:", error);
+      alert("Сталася помилка. Спробуйте ще раз пізніше.");
+   }
   };
-
+ 
   return (
     <div className="register-page">
       <div className="register-page__container">
@@ -123,7 +180,7 @@ const RegisterPage: React.FC = () => {
             Email
           </label>
           <input
-            className="register-page__input register-page__input--email"
+            className={`register-page__input register-page__input--email ${emailError ? 'register-page__input--error' : ''}`}
             type="email"
             id="email"
             placeholder="Введіть Email"
@@ -133,6 +190,7 @@ const RegisterPage: React.FC = () => {
             required
             disabled={isEmailSubmitted}
           />
+          {emailError && <p className="register-page__error">{emailError}</p>}
           {isEmailSubmitted && (
             <>
               <label htmlFor="full_name" className="register-page__label">Ім'я</label>
@@ -146,11 +204,12 @@ const RegisterPage: React.FC = () => {
                 onChange={handleChange}
                 required
               />
+              {nameError && <p className="register-page__error">{nameError}</p>}
               {!isGoogleSignUp && (
                 <>
                   <label htmlFor="password" className="register-page__label">Пароль</label>
                   <input
-                    className="register-page__input register-page__input--password"
+                    className={`register-page__input register-page__input--password ${passwordError ? 'register-page__input--error' : ''}`}
                     type="password"
                     placeholder="Вкажіть пароль"
                     name="password"
@@ -159,6 +218,7 @@ const RegisterPage: React.FC = () => {
                     onChange={handleChange}
                     required
                   />
+                  {passwordError && <p className="register-page__error">{passwordError}</p>}
                 </>
               )}
               <button type="submit" className="register-page__button register-page__button--submit">
@@ -198,7 +258,9 @@ const RegisterPage: React.FC = () => {
           </NavLink>
         </p>
       </div>
-      <div className="register-page__image-container"></div>
+      <div className="register-page__image-container">
+        <Slider />
+      </div>
     </div>
   );
 };

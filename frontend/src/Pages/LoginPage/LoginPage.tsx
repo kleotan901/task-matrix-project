@@ -4,17 +4,22 @@ import { signInWithPopup, User } from 'firebase/auth';
 import { Context, googleAuthProvider } from '../../firebase';
 import { LANDING_PAGE_ROUTE, PROFILE_ROUTE } from '../../utils/const';
 import googleIcon from "../../icons/flat-color-icons_google.png";
+import { Slider } from '../../Components/Slider';
+import { loginWithEmail, postUserGoodle } from '../../utils/api';
+import { LoginData } from '../../type/LoginData';
+import { UserData } from '../../type/UserData';
 
 const LoginPage = () => {
   const firebaseContext = useContext(Context);
   const navigate = useNavigate();
-  
-  const [loginData, setLoginData] = useState({
+
+  const [loginData, setLoginData] = useState<LoginData>({
     email: '',
     password: '',
   });
 
-  const [rememberMe, setRememberMe] = useState(false); // Стан для чекбоксу "Запам'ятати мене"
+  const [rememberMe, setRememberMe] = useState(false);
+  // const [isGoogleSignUp, setIsGoogleSignUp] = useState(false);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = event.target;
@@ -28,58 +33,40 @@ const LoginPage = () => {
     }
   };
 
-  // Обробка логіну через Google
-  const loginWithGoogle = async () => {
-    if (!firebaseContext || !firebaseContext.auth) {
-      console.error("Firebase context або auth не доступний");
-      return;
-    }
-
-    const { auth } = firebaseContext;
-
-    try {
-      const result = await signInWithPopup(auth, googleAuthProvider);
-      const user: User = result.user;
-
-      const userData = {
-        email: user.email || '',
-        full_name: user.displayName || '',
-        avatar_url: user.photoURL || '',
-        verified_email: user.emailVerified,
-      };
-
-      // Збереження даних користувача у локальне сховище
-      if (rememberMe) {
-        localStorage.setItem('userData', JSON.stringify(userData));
-      } else {
-        sessionStorage.setItem('userData', JSON.stringify(userData));
+    const registerWithGoogle = async () => {
+      if (!firebaseContext || !firebaseContext.auth) {
+        console.error("Firebase context або auth не доступний");
+        return;
       }
-
-      //POST-запит вашого серверу для логіну
+  
       try {
-        const response = await fetch('http://13.60.234.72/api/profile/login/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userData),
-        });
-
+        const { auth } = firebaseContext;
+        const result = await signInWithPopup(auth, googleAuthProvider);
+        const user: User = result.user;
+  
+        const userData: UserData = {
+          email: user.email || '',
+          full_name: user.displayName || '',
+          avatar_url: user.photoURL || '',
+          verified_email: user.emailVerified
+        };
+  
+        localStorage.setItem('userData', JSON.stringify(userData));
+  
+        const response = await postUserGoodle(userData); // Викликаємо функцію для реєстрації через email
+      
         if (response.ok) {
           navigate(PROFILE_ROUTE);
         } else {
-          const result = await response.json();
-          alert(result.message || 'Щось пішло не так');
+          alert(response.result || `Код помилки: ${response.status}`);
         }
-      } catch (error) {
-        console.error('Error during login:', error);
-      }
-    } catch (error) {
-      console.error('Error during sign in with popup:', error);
-    }
-  };
+        } catch (error) {
+          console.error("Помилка під час реєстрації:", error);
+          alert("Сталася помилка. Спробуйте ще раз пізніше.");
+        }
+    };
 
-  // Обробка стандартного логіну через email та пароль
+  // Логін через email та пароль
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -90,38 +77,24 @@ const LoginPage = () => {
       return;
     }
 
-    // Надсилання POST-запиту до вашого серверу для логіну
     try {
-      const response = await fetch('http://13.60.234.72/api/profile/login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
+      const response = await loginWithEmail(loginData); // Використовуємо loginData
       if (response.ok) {
-        // Зберігаємо дані користувача відповідно до стану чекбоксу
-        const userData = { email, password };
-
+        // Збереження даних користувача
         if (rememberMe) {
-          localStorage.setItem('userData', JSON.stringify(userData));
+          localStorage.setItem('loginData', JSON.stringify(loginData));
         } else {
-          sessionStorage.setItem('userData', JSON.stringify(userData));
+          sessionStorage.setItem('loginData', JSON.stringify(loginData));
         }
-
-        // Якщо логін успішний, перенаправляємо на профіль
-        navigate(PROFILE_ROUTE);
+        navigate(PROFILE_ROUTE); // Перенаправляємо на сторінку профілю
       } else {
-        const result = await response.json();
-        alert(result.message || 'Щось пішло не так');
+        alert('Щось пішло не так. Спробуйте ще раз.');
       }
     } catch (error) {
-      console.error('Error during login:', error);
+      console.error("Помилка при логіні:", error);
       alert('Щось пішло не так. Будь ласка, спробуйте пізніше.');
     }
   };
-
 
   return (
     <div className="register-page">
@@ -191,7 +164,7 @@ const LoginPage = () => {
           </button>
           <button
             type="button"
-            onClick={loginWithGoogle}
+            onClick={registerWithGoogle}
             className="register-page__button register-page__button--google"
           >
             <img src={googleIcon} alt="google" />
@@ -199,7 +172,9 @@ const LoginPage = () => {
           </button>
         </form>
       </div>
-      <div></div>
+      <div className="register-page__image-container">
+        <Slider />
+      </div>
     </div>
   );
 };
