@@ -1,4 +1,6 @@
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.validators import EmailValidator
+from django.core.exceptions import ValidationError
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -21,7 +23,7 @@ from profile.serializers import (
     UserAvatarChangeOrDeleteSerializer,
 )
 
-from profile.tasks import send_email, send_reset_password
+from profile.tasks import send_email, send_reset_password, create_payments
 from profile.utils import split_full_name
 from payment.stripe import create_checkout_session
 from payment.models import Payment
@@ -38,22 +40,7 @@ class CreateUserView(generics.CreateAPIView):
         token = EmailConfirmationToken.objects.create(user=user)
         send_email.delay(user.email, token.id, user.id)
 
-        session = create_checkout_session(user)
-        
-        Payment.objects.create(
-          user=user,
-          session_url=session[0].url,
-          session_id=session[0].id,
-          payment_type="premium",
-          status="PENDING"
-        )
-        Payment.objects.create(
-          user=user,
-          session_url=session[1].url,
-          session_id=session[1].id,
-          payment_type="profi",
-          status="PENDING"
-        )
+        create_payments.delay(user.id)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -157,7 +144,9 @@ class GoogleUserProfile(APIView):
     )
     def post(self, request, *args, **kwargs):
         user_info = request.data
-        if user_info.get("email", None) is None:
+        email = user_info.get("email")
+        full_name = user_info.get("full_name")
+        if not email:
             return Response(
                 {
                     "message": "Email is required",
@@ -165,26 +154,38 @@ class GoogleUserProfile(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Validate email format
+        email_validator = EmailValidator()
+        try:
+            email_validator(email)
+        except ValidationError:
+            return Response(
+              {"message": "Invalid email address"},
+              status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # Create or update user in DB
         user, created = User.objects.get_or_create(
-            email=user_info["email"],
+            email=email,
             defaults={
-                "full_name": user_info.get("full_name"),
+                "full_name": full_name,
                 "avatar_url": user_info.get("avatar_url"),
                 "email_is_verified": user_info.get("verified_email"),
             },
         )
-        split_full_name(user, user.full_name)
-
+        
+        split_full_name(user, full_name)
+        
         # If user already exists, update the necessary fields
         if not created:
-            user.full_name = user_info.get("full_name")
-            if user.full_name:
-                split_full_name(user, user.full_name)
+            user.full_name = full_name
             user.avatar_url = user_info.get("avatar_url")
             user.email_is_verified = user_info.get("verified_email")
             user.save()
 
+        if not user.payment.exists():
+            create_payments.delay(user.id)
+        
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
         jwt_tokens = {
