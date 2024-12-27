@@ -8,6 +8,11 @@ from django.utils.html import strip_tags
 from celery import shared_task
 from task.models import Task
 
+from payment.stripe import create_checkout_session
+from payment.models import Payment
+
+from profile.models import User
+
 
 @shared_task()
 def send_email(email, token_id, user_id):
@@ -79,3 +84,27 @@ def get_deadline_tasks():
     for task in deadline_tasks:
         user = task.user
         send_deadline_task_alert_for_user(user.email, task.title)
+
+@shared_task()
+def create_payments(user_id):
+    try:
+        user = User.objects.get(pk=user_id)
+        session = create_checkout_session(user)
+    except User.DoesNotExist:
+        print(f"User with ID {user_id} does not exist")
+    
+    Payment.objects.create(
+          user=user,
+          session_url=session[0].url,
+          session_id=session[0].id,
+          payment_type="premium",
+          status="PENDING"
+        )
+        
+    Payment.objects.create(
+          user=user,
+          session_url=session[1].url,
+          session_id=session[1].id,
+          payment_type="profi",
+          status="PENDING"
+        )
