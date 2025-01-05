@@ -7,5 +7,8 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = [
             "status",
-            "payment_type",
+            "subscription_type",
+            "is_active",
+            "session_url",
+            "subscription_id",
         ]
