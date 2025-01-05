@@ -9,6 +9,7 @@ from profile.utils import split_full_name
 from project.models import Project
 from task.models import Task
 from payment.models import Payment
+from payment.serializers import PaymentSerializer
 
 
 class PlanAndSubscriptionSerializer(serializers.ModelSerializer):
@@ -20,7 +21,7 @@ class PlanAndSubscriptionSerializer(serializers.ModelSerializer):
 class SubscriptionHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = SubscriptionHistory
-        fields = ("id", "user", "payment_date", "subscription_type", "price", "status")
+        fields = ("id", "user", "bill", "payment_date", "plan")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -50,7 +51,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserDetailSerializer(serializers.ModelSerializer):
     # full_name = serializers.CharField(source="get_full_name", read_only=True)
-    plan_and_subscription = serializers.SerializerMethodField()
+    plan_and_subscription = PaymentSerializer(read_only=True, many=True)
     subscription_history = SubscriptionHistorySerializer(read_only=True, many=True)
     projects_number = serializers.SerializerMethodField()
     tasks_number = serializers.SerializerMethodField()
@@ -71,17 +72,6 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "plan_and_subscription",
             "subscription_history",
         )
-
-    def get_plan_and_subscription(self, obj) -> list:
-        result_dict = [{plan: price} for plan, price in SubscriptionHistory.PRICES.items()]
-        result_dict[1]["payment_url_premium"] = Payment.objects.get(
-          user=obj, payment_type="premium"
-        ).session_url
-        result_dict[2]["payment_url_profi"] = Payment.objects.get(
-          user=obj, payment_type="profi"
-        ).session_url
-        
-        return result_dict
 
     def get_projects_number(self, obj) -> int:
         count_projects = Project.objects.filter(user=obj).count()
