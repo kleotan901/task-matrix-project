@@ -1,7 +1,12 @@
 import os
 import uuid
+
 from django.conf import settings
 from django.utils import timezone
+from datetime import datetime
+
+from django.core.files.base import ContentFile
+from payment.bill_generator import to_csv_content
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -60,7 +65,6 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)
     mobile_phone = models.CharField(max_length=16, blank=True, null=True)
-    
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -90,9 +94,9 @@ class PasswordReset(models.Model):
 
 class SubscriptionHistory(models.Model):
     SUBSCRIPTION = [
-        ("base", "base"),
-        ("premium", "premium"),
-        ("profi", "profi"),
+        ("base", "Base plan"),
+        ("premium", "Premium plan"),
+        ("profi", "Profi plan"),
     ]
     PRICES = {
         "base": 0.00,
@@ -104,19 +108,41 @@ class SubscriptionHistory(models.Model):
         on_delete=models.CASCADE,
         related_name="subscription_history",
     )
+    bill = models.FileField(upload_to="uploads/bills", max_length=254, blank=True)
     payment_date = models.DateTimeField(default=timezone.now)
-    subscription_type = models.CharField(
+    plan = models.CharField(
         max_length=50, choices=SUBSCRIPTION, blank=True, default=None, null=True
     )
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     status = models.BooleanField(default=False)
 
+    def bill_file_name(self):
+        directory = os.path.join("media", "uploads", "bills")
+        os.makedirs(directory, exist_ok=True)
+        file_name = f"bill_{self.user.id}_{datetime.now().strftime('%Y-%m-%d')}.csv"
+        return file_name
+
     def save(self, *args, **kwargs):
-        if self.subscription_type in self.PRICES:
-            self.price = self.PRICES[self.subscription_type]
+        if self.plan in self.PRICES:
+            self.price = self.PRICES[self.plan]
         else:
             self.price = None
+        # Create the bill's file name
+        file_name = self.bill_file_name()
+
+        content = {
+            "email": self.user.email,
+            "date": self.payment_date,
+            "plan": self.plan,
+            "price": self.price,
+            "status": self.status,
+        }
+
+        csv_content = to_csv_content(content)
+
+        # Save the bill file to the FileField
+        self.bill.save(file_name, ContentFile(csv_content), save=False)
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.email} - {self.subscription_type} at {self.payment_date}"
+        return f"{self.user.email} - {self.plan} at {self.payment_date}"
