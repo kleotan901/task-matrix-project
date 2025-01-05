@@ -160,8 +160,8 @@ class GoogleUserProfile(APIView):
             email_validator(email)
         except ValidationError:
             return Response(
-              {"message": "Invalid email address"},
-              status=status.HTTP_400_BAD_REQUEST,
+                {"message": "Invalid email address"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Create or update user in DB
@@ -173,9 +173,9 @@ class GoogleUserProfile(APIView):
                 "email_is_verified": user_info.get("verified_email"),
             },
         )
-        
+
         split_full_name(user, full_name)
-        
+
         # If user already exists, update the necessary fields
         if not created:
             user.full_name = full_name
@@ -185,7 +185,7 @@ class GoogleUserProfile(APIView):
 
         if not user.payment.exists():
             create_payments.delay(user.id)
-        
+
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
         jwt_tokens = {
