@@ -16,7 +16,14 @@ export const Sidebar = () => {
         <nav>
 
         </nav>
-        <div className="sidebar__profile">          
+        <div className="sidebar__profile">    
+          <div>
+          </div>
+          <div className="profile__name">
+             <div></div>
+             <div>Переглянути профіль</div>
+          </div>
+        
 
         </div>
       </div>

@@ -8,6 +8,7 @@ import { Slider } from '../../Components/Slider';
 import { loginWithEmail, postUserGoodle } from '../../utils/api';
 import { LoginData } from '../../type/LoginData';
 import { UserData } from '../../type/UserData';
+import { OrDivider } from '../../Components/OrDivider';
 
 const LoginPage = () => {
   const firebaseContext = useContext(Context);
@@ -162,6 +163,7 @@ const LoginPage = () => {
           >
             Продовжити
           </button>
+          <OrDivider />
           <button
             type="button"
             onClick={registerWithGoogle}

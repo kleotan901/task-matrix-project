@@ -1,0 +1,19 @@
+@import './utils/vars';
+
+.or-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+
+  .line {
+    flex-grow: 1;
+    border: none;
+    border-top: 1px solid $color_grey;
+  }
+
+  .text {
+    margin: 0 10px;
+    color: $color_grey;
+    font-size: 14px;
+  }
+}
