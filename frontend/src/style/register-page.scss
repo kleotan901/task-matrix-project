@@ -8,6 +8,11 @@
     width: 59%;
   }
 
+  &__image-container {
+    width: 41%;
+    height: 100%;
+  }
+
   &__logo {
     display: flex;
     justify-content: center;
@@ -92,7 +97,7 @@
 
   &__error {
     color: $color_for_error;
-    font-size: 16Spx;
+    font-size: 16px;
   }
 
   &__button {
@@ -111,7 +116,6 @@
 
     &--continue {
       margin-top: 10px;
-      margin-bottom: 20px;
       background-color: $color_softBluePurple;
       color: $color_white;
 

@@ -8,6 +8,7 @@ import "../../style/register-page.scss";
 import googleIcon from "../../icons/flat-color-icons_google.png";
 import { Slider } from "../../Components/Slider";
 import { postUserEmail, postUserGoodle } from "../../utils/api";
+import { OrDivider } from "../../Components/OrDivider";
 
 const RegisterPage: React.FC = () => {
   const firebaseContext = useContext(Context);
@@ -235,6 +236,7 @@ const RegisterPage: React.FC = () => {
               Продовжити
             </button>
           )}
+          <OrDivider />
           {!isGoogleSignUp && !isEmailSubmitted && (
             <button 
               type="button" 
