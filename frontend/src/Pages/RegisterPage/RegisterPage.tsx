@@ -146,23 +146,21 @@ const RegisterPage: React.FC = () => {
       : { email, full_name, password: formData.password };
   
     localStorage.setItem('userData', JSON.stringify(userData));
-
-    if (!isGoogleSignUp) {
-      try {
-        const response = await postUserEmail(userData);
-     
-        if (response.ok) {
-            navigate(PROFILE_ROUTE);
-        } else if (response.status === 400) {
-          setEmailError("Такий акаунт уже існує.");
-        } else {
-            alert(response.result || `Код помилки: ${response.status}`);
-        }
-     } catch (error) {
-        console.error("Помилка під час реєстрації:", error);
-        alert("Сталася помилка. Спробуйте ще раз пізніше.");
-     }
-    }
+    
+    try {
+      const response = await postUserEmail(userData);
+   
+      if (response.ok) {
+          navigate(PROFILE_ROUTE);
+      } else if (response.status === 400) {
+        setEmailError("Такий акаунт уже існує.");
+      } else {
+          alert(response.result || `Код помилки: ${response.status}`);
+      }
+   } catch (error) {
+      console.error("Помилка під час реєстрації:", error);
+      alert("Сталася помилка. Спробуйте ще раз пізніше.");
+   }
   };
  
   return (
