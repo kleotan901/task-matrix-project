@@ -253,7 +253,7 @@ const RegisterPage: React.FC = () => {
           <a href="/" className="register-page__url"> Terms of Service</a> 
           <br/>
           and acknowledging receipt of our 
-          <a href="/" className="register-page__url"> Privacy Policy</a> 
+          <a href="/" className="register-page__url">Privacy Policy</a> 
         </p>
         <p className="register-page__login">
           Вже зареєстровані? 
