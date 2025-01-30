@@ -183,7 +183,7 @@ class GoogleUserProfile(APIView):
             user.email_is_verified = user_info.get("verified_email")
             user.save()
 
-        if not user.payment.exists():
+        if not user.plan_and_subscription.exists():
             create_payments.delay(user.id)
 
         # Generate JWT tokens
