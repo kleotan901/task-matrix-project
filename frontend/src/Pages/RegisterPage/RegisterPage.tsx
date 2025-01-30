@@ -17,7 +17,7 @@ const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState<UserData>({
     email: '',
     full_name: '',
-    password: undefined,
+    password: '',
     verified_email: false 
   });
 
@@ -61,11 +61,10 @@ const RegisterPage: React.FC = () => {
       setIsGoogleSignUp(true);
       setIsEmailSubmitted(true);
 
-      localStorage.setItem('userData', JSON.stringify(userData));
-
       const response = await postUserGoodle(userData); // Викликаємо функцію для реєстрації через email
     
       if (response.ok) {
+        localStorage.setItem('userData', JSON.stringify(userData));
         navigate(PROFILE_ROUTE);
       } else {
         alert(response.result || `Код помилки: ${response.status}`);
@@ -144,23 +143,24 @@ const RegisterPage: React.FC = () => {
     const userData = isGoogleSignUp
       ? { email, full_name, avatar_url: formData.avatar_url, emailVerified: formData.verified_email }
       : { email, full_name, password: formData.password };
-  
-    localStorage.setItem('userData', JSON.stringify(userData));
-    
-    try {
-      const response = await postUserEmail(userData);
-   
-      if (response.ok) {
+
+    if (!isGoogleSignUp) {
+      try {
+        const response = await postUserEmail(formData);
+
+        if (response.ok) {
+          localStorage.setItem('userData', JSON.stringify(userData));
           navigate(PROFILE_ROUTE);
-      } else if (response.status === 400) {
-        setEmailError("Такий акаунт уже існує.");
-      } else {
+        } else if (response.status === 400) {
+          setEmailError("Користувач із таким email уже існує. Використайте інший email або увійдіть.");
+        } else {
           alert(response.result || `Код помилки: ${response.status}`);
+        }
+      } catch (error) {
+        console.error("Помилка під час реєстрації:", error);
+        alert("Сталася помилка. Спробуйте ще раз пізніше.");
       }
-   } catch (error) {
-      console.error("Помилка під час реєстрації:", error);
-      alert("Сталася помилка. Спробуйте ще раз пізніше.");
-   }
+    }  
   };
  
   return (
@@ -236,14 +236,16 @@ const RegisterPage: React.FC = () => {
               Продовжити
             </button>
           )}
-          <OrDivider />
           {!isGoogleSignUp && !isEmailSubmitted && (
-            <button 
-              type="button" 
-              onClick={registerWithGoogle} 
-              className="register-page__button register-page__button--google">
-              <img src={googleIcon} alt="google" /> Продовжити з Google
-            </button>
+            <>
+              <OrDivider />
+              <button 
+                type="button" 
+                onClick={registerWithGoogle} 
+                className="register-page__button register-page__button--google">
+                <img src={googleIcon} alt="google" /> Продовжити з Google
+              </button>
+            </>
           )}
         </form>
         <p className="register-page__terms">
