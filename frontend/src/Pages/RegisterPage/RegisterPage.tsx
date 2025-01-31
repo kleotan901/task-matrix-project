@@ -39,7 +39,7 @@ const RegisterPage: React.FC = () => {
   }, [firebaseContext, navigate]);
 
   // Реєстрація через Google
-  const registerWithGoogle = async () => {
+  /*const registerWithGoogle = async () => {
     if (!firebaseContext || !firebaseContext.auth) {
       console.error("Firebase context або auth не доступний");
       return;
@@ -73,6 +73,40 @@ const RegisterPage: React.FC = () => {
         console.error("Помилка під час реєстрації:", error);
         alert("Сталася помилка. Спробуйте ще раз пізніше.");
       }
+  };*/
+
+  const registerWithGoogle = async () => {
+    if (!firebaseContext || !firebaseContext.auth) {
+      console.error("Firebase context або auth не доступний");
+      return;
+    }
+
+    try {
+      const { auth } = firebaseContext;
+      const result = await signInWithPopup(auth, googleAuthProvider);
+      const user: User = result.user;
+
+      const userData: UserData = {
+        email: user.email || '',
+        full_name: user.displayName || '',
+        avatar_url: user.photoURL || '',
+        verified_email: user.emailVerified
+      };
+      
+      setIsGoogleSignUp(true);
+
+      const response = await postUserGoodle(userData);
+    
+      if (response.ok) {
+        localStorage.setItem('userData', JSON.stringify(userData));
+        navigate(PROFILE_ROUTE);
+      } else {
+        alert(response.result || `Код помилки: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Помилка під час реєстрації:", error);
+      alert("Сталася помилка. Спробуйте ще раз пізніше.");
+    }
   };
 
   // Обробка зміни полів форми
