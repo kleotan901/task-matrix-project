@@ -33,29 +33,39 @@ class PaymentViewSet(
         )
         customer = stripe.Customer.retrieve(session.customer)
 
-        payment = Payment.objects.get(session_id=session.id)
-        # if payment was success -> status changed to "PAID"
-        payment.status = "PAID"
-        payment.save()
-
         # Retrieve the line items associated with the session
         line_items = stripe.checkout.Session.list_line_items(session.id)
         # Loop through line items to extract price and product details
         for item in line_items.data:
-            price_id = item.price.id
-            product_id = item.price.product
+            price = stripe.Price.retrieve(item.price.id)
+            product = stripe.Product.retrieve(item.price.product)
 
-            price = stripe.Price.retrieve(price_id)
-            product = stripe.Product.retrieve(product_id)
+            # iterate through all avalible subscription plans
+            user_plans_available = request.user.plan_and_subscription.all()
+            for current_pln in user_plans_available:
+                if (
+                    current_pln.status == "PENDING"
+                    and current_pln.subscription_type == product.name
+                ):
+                    # create bill of payment
+                    subscription = SubscriptionHistory.objects.create(
+                        user=request.user,
+                        plan=product.name,
+                        price=price.unit_amount_decimal,
+                        status=True,
+                    )
+                    current_pln.status = "PAID"
+                # activate subscribtion (is_active)
+                current_pln.is_active = current_pln.subscription_type == product.name
+                # update subscription id in the DB
+                if current_pln.is_active:
+                    current_pln.subscription_id = session.subscription
+                else:
+                    current_pln.subscription_id = ""
 
-            subscription = SubscriptionHistory.objects.create(
-                user=request.user,
-                subscription_type=product.name,
-                price=price.unit_amount_decimal,
-                status=True,
-            )
+                current_pln.save()
 
         return Response(
-            {"message": f"Thank you for payment, {customer.name}!"},
+            {"message": f"Thank you for payment, {request.user.get_full_name()}!"},
             status=status.HTTP_201_CREATED,
         )

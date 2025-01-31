@@ -22,6 +22,11 @@ def create_price_object(product: Product, amount: int, interval: str) -> Session
     )
 
 
+def create_customer(user: User):
+    customer = stripe.Customer.create(name=user.get_full_name(), email=user.email)
+    return customer
+
+
 def create_checkout_session(user: User) -> tuple[Session] | Exception:
     try:
         product_premium = create_product("premium")
@@ -30,7 +35,7 @@ def create_checkout_session(user: User) -> tuple[Session] | Exception:
         price_premium = create_price_object(product_premium, 39900, "month")
         price_profi = create_price_object(product_profi, 69900, "month")
 
-        customer = stripe.Customer.create(name=user.get_full_name(), email=user.email)
+        customer = create_customer(user)
 
         session_premium = stripe.checkout.Session.create(
             payment_method_types=["card"],
