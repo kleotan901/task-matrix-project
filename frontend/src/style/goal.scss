@@ -1,4 +1,4 @@
-@import './utils/vars';
+@use './utils/vars' as *;
 
 .goal {
   padding-top: 70px;
