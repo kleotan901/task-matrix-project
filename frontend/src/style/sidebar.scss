@@ -1,4 +1,4 @@
-@import './utils/vars';
+@use './utils/vars' as *;
 
 .sidebar {
   &__profile {

@@ -1,4 +1,4 @@
-@import './utils/vars';
+@use './utils/vars' as *;
 
 .top-content {
   padding-top: 42px;

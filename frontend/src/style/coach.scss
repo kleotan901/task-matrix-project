@@ -1,4 +1,4 @@
-@import './utils/vars';
+@use './utils/vars' as *;
 
 .coach {
   padding-top: 70px;

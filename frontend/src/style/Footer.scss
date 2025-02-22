@@ -1,5 +1,4 @@
-@import "./utils/vars";
-
+@use './utils/vars' as *;
 .footer {
   border-top: 1px solid $color_softBluePurple;
   padding: 25px 0;
