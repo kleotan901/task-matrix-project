@@ -1,3 +1,6 @@
+import logging
+import threading
+
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError
@@ -10,6 +13,9 @@ from rest_framework.views import APIView
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from redis.exceptions import ConnectionError as RedisConnectionError
+from kombu.exceptions import OperationalError
 
 from profile.models import EmailConfirmationToken, User, PasswordReset
 from profile.serializers import (
@@ -28,6 +34,8 @@ from profile.utils import split_full_name
 from payment.stripe import create_checkout_session
 from payment.models import Payment
 
+logger = logging.getLogger(__name__)
+
 
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
@@ -38,11 +46,25 @@ class CreateUserView(generics.CreateAPIView):
         user = serializer.save()
 
         token = EmailConfirmationToken.objects.create(user=user)
-        send_email.delay(user.email, token.id, user.id)
+        # Define a function to run Celery tasks in a separate thread
+        def run_tasks():
+            try:
+                send_email.delay(user.email, token.id, user.id)
+            except (RedisConnectionError, OperationalError) as error:
+                logger.error(f"Failed to send confirmation email: {error}")
 
-        create_payments.delay(user.id)
+            try:
+                create_payments.delay(user.id)
+            except (RedisConnectionError, OperationalError) as error:
+                logger.error(f"Failed to schedule payment creation: {error}")
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # Run the function in a separate thread
+        threading.Thread(target=run_tasks).start()
+
+        return Response(
+            {**serializer.data, "message": "User registered successfully."},
+            status=status.HTTP_201_CREATED
+        )
 
 
 class ManageUserView(generics.RetrieveUpdateAPIView, generics.DestroyAPIView):
@@ -184,7 +206,14 @@ class GoogleUserProfile(APIView):
             user.save()
 
         if not user.plan_and_subscription.exists():
-            create_payments.delay(user.id)
+            # Define a function to run Celery tasks in a separate thread
+            def run_tasks():
+                try:
+                    create_payments.delay(user.id)
+                except (RedisConnectionError, OperationalError) as error:
+                    logger.error(f"Failed to schedule subscriptions creation: {error}")
+            # Run the function in a separate thread
+            threading.Thread(target=run_tasks).start()
 
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)

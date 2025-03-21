@@ -91,22 +91,23 @@ def create_payments(user_id):
     try:
         user = User.objects.get(pk=user_id)
         session = create_checkout_session(user)
+
+        Payment.objects.create(
+            user=user, subscription_type="base", status="PENDING", is_active=True
+        )
+        Payment.objects.create(
+            user=user,
+            session_url=session[0].url,
+            session_id=session[0].id,
+            subscription_type="premium",
+            status="PENDING",
+        )
+        Payment.objects.create(
+            user=user,
+            session_url=session[1].url,
+            session_id=session[1].id,
+            subscription_type="profi",
+            status="PENDING",
+        )
     except User.DoesNotExist:
         print(f"User with ID {user_id} does not exist")
-    Payment.objects.create(
-        user=user, subscription_type="base", status="PENDING", is_active=True
-    )
-    Payment.objects.create(
-        user=user,
-        session_url=session[0].url,
-        session_id=session[0].id,
-        subscription_type="premium",
-        status="PENDING",
-    )
-    Payment.objects.create(
-        user=user,
-        session_url=session[1].url,
-        session_id=session[1].id,
-        subscription_type="profi",
-        status="PENDING",
-    )
