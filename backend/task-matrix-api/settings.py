@@ -219,23 +219,7 @@ SPECTACULAR_SETTINGS = {
         - Urgent but Not Important
         - Neither Urgent nor Important""",
     "VERSION": "1.0.0",
-    "SERVE_INCLUDE_SCHEMA": False,
-    "SWAGGER_UI_SETTINGS": {
-        "deepLinking": True,
-        "defaultModelRendering": "model",
-        "defaultModelsExpandDepth": 2,
-        "defaultModelExpandDepth": 2,
-        "persistAuthorization": True,
-    },
-    "COMPONENT_SPLIT_REQUEST": True,
-    "SCHEMA_PATH_PREFIX": "/api/",
-    "AUTHENTICATION_WHITELIST": [
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ],
-    "SECURITY": [
-        {"jwtAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}},
-    ],
+    "SERVE_INCLUDE_SCHEMA": False
 }
 
 # Celery settings
