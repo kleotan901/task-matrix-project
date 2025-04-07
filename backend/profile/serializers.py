@@ -40,7 +40,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create a new user with encrypted password and return it"""
-        full_name = validated_data.pop("full_name", None)
+        full_name = validated_data.get("full_name", None)
         user = get_user_model().objects.create_user(**validated_data)
         if full_name:
             split_full_name(user, full_name)
