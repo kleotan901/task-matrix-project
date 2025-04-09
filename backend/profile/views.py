@@ -1,15 +1,17 @@
 import logging
 import threading
 
+from django.db import IntegrityError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.validators import EmailValidator
-from django.core.exceptions import ValidationError
+from rest_framework.serializers import ValidationError
 from drf_spectacular.utils import extend_schema
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, status, viewsets, serializers
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import logout
 from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -34,6 +36,8 @@ from profile.utils import split_full_name
 from payment.stripe import create_checkout_session
 from payment.models import Payment
 
+from profile.serializers import MyTokenObtainPairSerializer
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,8 +46,21 @@ class CreateUserView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+        except ValidationError as error:
+            if "email" in error.detail:
+                if str(error.detail["email"][0]).lower() == "user with this email address already exists.":
+                    error.detail["email"][0] = "User with this email address already exists."
+
+            return Response(
+                {
+                    "status_code": 409,
+                    "message": error.detail
+                },
+                status=status.HTTP_409_CONFLICT
+            )
 
         token = EmailConfirmationToken.objects.create(user=user)
         # Define a function to run Celery tasks in a separate thread
@@ -62,7 +79,7 @@ class CreateUserView(generics.CreateAPIView):
         threading.Thread(target=run_tasks).start()
 
         return Response(
-            {**serializer.data, "message": "User registered successfully."},
+            {"message": "User registered successfully."},
             status=status.HTTP_201_CREATED
         )
 
@@ -229,6 +246,10 @@ class GoogleUserProfile(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class LoginView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 
 
 class LogoutApi(APIView):

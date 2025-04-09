@@ -15,6 +15,8 @@ from profile.views import (
     ResetPassword,
 )
 
+from profile.views import LoginView
+
 app_name = "profile"
 
 urlpatterns = [
@@ -30,7 +32,7 @@ urlpatterns = [
         SendEmailConfirmationView.as_view({"get": "email_verification"}),
         name="email-verification",
     ),
-    path("login/", TokenObtainPairView.as_view(), name="token-obtain-pair"),
+    path("login/", LoginView.as_view(), name="token-obtain-pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("token/verify/", TokenVerifyView.as_view(), name="token-verify"),
     path("myprofile/", ManageUserView.as_view(), name="profile-manage"),

@@ -1,11 +1,8 @@
-import json
-import urllib.parse as urllib_parse
 from unittest.mock import patch
-from django.conf import settings
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from requests.auth import _basic_auth_str
+
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient, APITestCase
@@ -20,24 +17,32 @@ class AccountNotAuthenticatedUserTestCase(TestCase):
         self.client = APIClient()
 
     def test_user_create_with_email_and_password_only(self):
-        payload = {"email": "emailtest@mail.com", "password": "testPassword1!"}
+        payload = {"email": "emailtest@mail.com", "password": "StrongPassword1!"}
         url = reverse("profile:create")
 
         response = self.client.post(url, payload)
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.json()["message"], "User registered successfully.")
 
-    def test_email_required(self):
-        payload = {"email": "", "password": "testPassword1!"}
+    def test_email_validation(self):
         url = reverse("profile:create")
+        correct_user_payload = {"email": "emailtest@mail.com", "password": "testPassword1!"}
+        self.client.post(url, correct_user_payload)
 
-        response = self.client.post(url, payload)
+        test_cases = [
+            ("", "This field may not be blank."),
+            ("incorrect_email.com", "Enter a valid email address."),
+            ("emailtest@mail.com", "User with this email address already exists."),
+        ]
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["error"]["details"]["email"][0],
-            "This field may not be blank.",
-        )
+        for invalid_email, expected_error in test_cases:
+            payload = {"email": invalid_email, "password": "testPassword1!"}
+            response = self.client.post(url, payload)
+
+            self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+            self.assertEqual(
+                str(response.data["message"]["email"][0]), expected_error
+            ), f"Expected error message: {expected_error}"
 
     @patch("profile.tasks.send_email.delay")
     def test_email_activation_link_send_when_profile_created(self, mock_send_email):

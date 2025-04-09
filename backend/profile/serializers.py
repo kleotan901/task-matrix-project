@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password, ValidationError
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework import serializers, status
-from rest_framework.response import Response
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from profile.models import EmailConfirmationToken, SubscriptionHistory
 from profile.utils import split_full_name
@@ -29,13 +29,15 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ("id", "email", "password", "full_name")
         read_only_fields = ("is_staff",)
-        extra_kwargs = {"password": {"write_only": True, "min_length": 8}}
+        extra_kwargs = {
+            "password": {"write_only": True, "min_length": 8}
+        }
 
     def validate_password(self, value):
         try:
             validate_password(value)
-        except ValidationError as e:
-            raise DRFValidationError(e.messages)
+        except ValidationError as error:
+            raise DRFValidationError(error.messages)
         return value
 
     def create(self, validated_data):
@@ -203,3 +205,10 @@ class ResetPasswordSerializer(serializers.Serializer):
         except ValidationError as err:
             raise DRFValidationError(err.messages)
         return value
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data["full_name"] = self.user.full_name
+        return data
